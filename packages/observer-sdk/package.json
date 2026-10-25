@@ -1,7 +1,7 @@
 {
   "name": "@youpi/observer-sdk",
   "version": "1.0.0",
-  "description": "SDK for submitting observations to YOUPI PG Payment Detection Core",
+  "description": "SDK for submitting observations to PayNova Payment Detection Core",
   "type": "module",
   "main": "./src/index.js",
   "dependencies": {

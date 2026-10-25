@@ -1,6 +1,6 @@
 # Payment Observers Setup & Configuration Guide
 
-YOUPI PG employs a **Tri-Channel Observation Engine** where all three methods operate simultaneously to capture payment credit alerts across channels without creating duplicate payments.
+PayNova employs a **Tri-Channel Observation Engine** where all three methods operate simultaneously to capture payment credit alerts across channels without creating duplicate payments.
 
 ---
 
@@ -42,7 +42,7 @@ YOUPI PG employs a **Tri-Channel Observation Engine** where all three methods op
 ### Pairing Procedure
 1. Open Merchant Admin (`http://localhost:6001`).
 2. Go to **Observers & Pairing** tab -> Click **+ Pair Android Device**.
-3. Open the YOUPI Observer app on your Android device.
+3. Open the PayNova Observer app on your Android device.
 4. Enter or scan the Gateway URL and Enrollment Token.
 5. Tap **Pair with Merchant Gateway**. The device will receive its permanent `deviceId` and `signingKey` stored in `EncryptedSharedPreferences`.
 6. Grant Notification Listener Access in Android System Settings.

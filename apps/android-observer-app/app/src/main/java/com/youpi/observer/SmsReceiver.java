@@ -27,7 +27,7 @@ public class SmsReceiver extends BroadcastReceiver {
 
         final ApiClient client = new ApiClient(context);
         if (!client.isPaired()) {
-            Log.w(TAG, "SMS received but device is not paired with Hackastra Pay. Skipping.");
+            Log.w(TAG, "SMS received but device is not paired with PayNova. Skipping.");
             return;
         }
 
@@ -54,12 +54,12 @@ public class SmsReceiver extends BroadcastReceiver {
 
             Log.i(TAG, "Captured structured bank credit from [" + sender + "]: ₹" + (amountPaise / 100.0d));
 
-            // Dispatch the structured observation to Hackastra Pay in an asynchronous worker thread
+            // Dispatch the structured observation to PayNova in an asynchronous worker thread
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     boolean success = client.sendObservation(amountPaise, amountPaise / 100.0d, bankRef, senderVpa, sender, "Bank SMS credit");
-                    Log.i(TAG, "Dispatched payment observation to Hackastra Pay: " + (success ? "SUCCESS" : "FAILED"));
+                    Log.i(TAG, "Dispatched payment observation to PayNova: " + (success ? "SUCCESS" : "FAILED"));
                 }
             }).start();
         }

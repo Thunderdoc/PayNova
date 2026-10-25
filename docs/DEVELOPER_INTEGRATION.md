@@ -1,8 +1,8 @@
-# YOUPI PG V2 — Developer Integration Guide
+# PayNova — Developer Integration Guide
 
-Welcome to the official developer integration guide for **YOUPI PG V2**.
+Welcome to the official developer integration guide for **PayNova**.
 
-YOUPI PG V2 provides a **Universal One-Script Integration** that allows any web application to accept UPI payments with zero aggregator fees, sub-second QR rendering, and automated SMS/Gmail observation verification.
+PayNova provides a **Universal One-Script Integration** that allows any web application to accept UPI payments with zero aggregator fees, sub-second QR rendering, and automated SMS/Gmail observation verification.
 
 ---
 

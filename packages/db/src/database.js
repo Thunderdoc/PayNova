@@ -24,7 +24,7 @@ export function ensureDatabaseInitialized(db) {
 }
 
 /**
- * Universal Database Client for YOUPI PG.
+ * Universal Database Client for PayNova.
  * Uses native node:sqlite for high-performance, embedded zero-dependency local operation
  * with full transactional ACID guarantees.
  */

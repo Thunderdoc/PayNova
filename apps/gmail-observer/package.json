@@ -1,7 +1,7 @@
 {
   "name": "gmail-observer",
   "version": "1.0.0",
-  "description": "Gmail Payment Observer Service for YOUPI PG",
+  "description": "Gmail Payment Observer Service for PayNova",
   "type": "module",
   "main": "./src/index.js",
   "scripts": {

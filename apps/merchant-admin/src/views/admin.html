@@ -3074,7 +3074,7 @@
                       Disconnected</strong>
                   </div>
                   <div id="gmailHeroStatusDesc" style="font-size:0.82rem; color:var(--text-muted); line-height:1.4;">
-                    Connect your bank-registered Google account with one click. When you click authorize, YouPI PG
+                    Connect your bank-registered Google account with one click. When you click authorize, PayNova
                     handles the full OAuth flow, acquires persistent offline credentials, and activates 1-second UPI
                     credit polling.
                   </div>
@@ -3393,7 +3393,7 @@
             <li>In <strong>Google Cloud Console</strong> &gt; <em>Credentials</em>, add this exact redirect URI:
               <code
                 style="color:#38bdf8; display:block; margin:0.2rem 0; background:#020617; padding:2px 6px; border-radius:4px;"
-                id="guideProdUri">https://pay-gmail.gauravtesting.online/oauth/callback</code>
+                id="guideProdUri">http://localhost:6003/oauth/callback</code>
             </li>
             <li>Under <em>OAuth consent screen</em> &gt; <em>Test users</em>, ensure your personal Gmail address is
               added.</li>
@@ -5451,7 +5451,7 @@
 
     // --- GMAIL DIRECT API & AUTOMATED GOOGLE LOGIN ---
     function copyGmailRedirectUri() {
-      const uri = document.getElementById('gmailRedirectUriInput')?.value || 'https://pay-gmail.gauravtesting.online/oauth/callback';
+      const uri = document.getElementById('gmailRedirectUriInput')?.value || 'http://localhost:6003/oauth/callback';
       navigator.clipboard.writeText(uri).then(() => {
         showAdminToast('Redirect URI copied to clipboard!');
       });
@@ -5581,7 +5581,7 @@
         if (document.getElementById('gmailClientSecretInput')) document.getElementById('gmailClientSecretInput').value = cfg.clientSecret || data.clientSecret || '';
         if (document.getElementById('gmailRefreshTokenInput')) document.getElementById('gmailRefreshTokenInput').value = cfg.refreshToken || '';
 
-        const redirectUri = data.redirectUri || 'https://pay-gmail.gauravtesting.online/oauth/callback';
+        const redirectUri = data.redirectUri || 'http://localhost:6003/oauth/callback';
         if (document.getElementById('gmailRedirectUriInput')) document.getElementById('gmailRedirectUriInput').value = redirectUri;
         if (document.getElementById('guideProdUri')) document.getElementById('guideProdUri').textContent = redirectUri;
 
@@ -5615,7 +5615,7 @@
           if (heroDot) heroDot.style.background = '#ef4444';
           if (heroTitle) heroTitle.textContent = 'Google Account Disconnected';
           if (heroDesc) {
-            heroDesc.textContent = 'Connect your bank-registered Google account with one click. When you click authorize, YouPI PG handles the full OAuth flow, acquires persistent offline credentials, and activates 1-second UPI credit polling.';
+            heroDesc.textContent = 'Connect your bank-registered Google account with one click. When you click authorize, PayNova handles the full OAuth flow, acquires persistent offline credentials, and activates 1-second UPI credit polling.';
           }
           if (authBtnLabel) authBtnLabel.textContent = 'Connect with Google (One-Click)';
           if (disconnectBtn) disconnectBtn.style.display = 'none';

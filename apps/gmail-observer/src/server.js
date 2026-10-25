@@ -55,7 +55,7 @@ export class GmailObserverServer {
       // GET /oauth/url
       if (pathname === '/oauth/url') {
         let clientId = '';
-        const apiBase = (this.poller.apiBaseUrl && !this.poller.apiBaseUrl.includes('gauravtesting.online')) ? this.poller.apiBaseUrl : `http://127.0.0.1:${process.env.PAYMENT_API_PORT || 6100}`;
+        const apiBase = (this.poller.apiBaseUrl || `http://127.0.0.1:${process.env.PAYMENT_API_PORT || 6100}`);
         try {
           const credRes = await fetch(`${apiBase}/api/v1/admin/gmail/credentials`);
           if (credRes.ok) {
@@ -102,7 +102,7 @@ export class GmailObserverServer {
         try {
           let clientId = '';
           let clientSecret = '';
-          const apiBase = (this.poller.apiBaseUrl && !this.poller.apiBaseUrl.includes('gauravtesting.online')) ? this.poller.apiBaseUrl : `http://127.0.0.1:${process.env.PAYMENT_API_PORT || 6100}`;
+          const apiBase = (this.poller.apiBaseUrl || `http://127.0.0.1:${process.env.PAYMENT_API_PORT || 6100}`);
 
           try {
             const credRes = await fetch(`${apiBase}/api/v1/admin/gmail/credentials`);
@@ -215,7 +215,7 @@ export class GmailObserverServer {
             <html>
             <head>
               <meta charset="utf-8">
-              <title>Hackastra Pay — Google Connected</title>
+              <title>PayNova — Google Connected</title>
               <meta name="viewport" content="width=device-width, initial-scale=1">
               <style>
                 * { box-sizing: border-box; }

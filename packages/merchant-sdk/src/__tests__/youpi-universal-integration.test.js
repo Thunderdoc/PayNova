@@ -4,7 +4,7 @@ import { Database } from '@youpi/db';
 import { startServer as startPaymentApi } from '../../../../apps/payment-api/src/index.js';
 import { YoupiPaymentClient, YoupiCheckout, Youpi } from '../index.js';
 
-describe('Universal YOUPI PG One-Script Integration Tests', () => {
+describe('Universal PayNova One-Script Integration Tests', () => {
   let apiInstance;
   let testDb;
 

@@ -250,8 +250,8 @@
   </div>
 </div>
 
-<!-- Universal YOUPI PG Integration SDK -->
-<script src="/youpi.js"></script>
+<!-- Universal PayNova Integration SDK -->
+<script src="/paynova.js"></script>
 
 <script>
   const urlParams = new URLSearchParams(window.location.search);
@@ -307,8 +307,8 @@
       const data = await res.json();
 
       if (res.ok && data.checkoutUrl) {
-        if (window.Youpi) {
-          Youpi.pay({
+        if (window.PayNova) {
+          PayNova.pay({
             checkoutUrl: data.checkoutUrl,
             order_id: data.orderId,
             amount: price,

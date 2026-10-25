@@ -1,6 +1,6 @@
 # White-Label Branding System Guide
 
-YOUPI PG is built from the ground up to be 100% white-label. No hardcoded brand names, logos, or client-specific colors exist in core payment components.
+PayNova is built from the ground up to be 100% white-label. No hardcoded brand names, logos, or client-specific colors exist in core payment components.
 
 ---
 
@@ -48,7 +48,7 @@ The Checkout Portal and Help Portal dynamically map merchant branding to native 
 
 ## 3. Custom Domain Routing (Nginx / Caddy Reverse Proxy)
 
-To run YOUPI PG on production domains:
+To run PayNova on production domains:
 
 ```nginx
 # Checkout Portal

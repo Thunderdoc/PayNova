@@ -1,7 +1,7 @@
 {
   "name": "checkout-portal",
   "version": "1.0.0",
-  "description": "White-label responsive customer checkout portal for YOUPI PG",
+  "description": "White-label responsive customer checkout portal for PayNova",
   "type": "module",
   "main": "./src/index.js",
   "scripts": {

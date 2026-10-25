@@ -1337,7 +1337,10 @@ export function registerAdminRoutes(server, ctx) {
         message: 'Enter this 8-digit pairing code on your phone in WhatsApp > Linked Devices > Link with phone number.'
       });
     } catch (err) {
-      HttpServer.json(res, 500, { success: false, error: err.message });
+      // WhatsApp unreachable is a downstream outage, not a server bug: 503,
+      // not a generic 500, so the admin UI can say so plainly.
+      const status = /timed out|unreachable|connection/i.test(err.message || '') ? 503 : 500;
+      HttpServer.json(res, status, { success: false, error: err.message });
     }
   });
 
@@ -1543,7 +1546,7 @@ export function registerAdminRoutes(server, ctx) {
     const branding = merchant?.branding || {};
     const gmailConfig = branding.gmailConfig || {};
 
-    const redirectUri = 'https://pay-gmail.gauravtesting.online/oauth/callback';
+    const redirectUri = process.env.GMAIL_REDIRECT_URI || 'http://localhost:6003/oauth/callback';
     const hasToken = Boolean(gmailConfig.refreshToken && gmailConfig.refreshToken.trim());
 
     HttpServer.json(res, 200, {

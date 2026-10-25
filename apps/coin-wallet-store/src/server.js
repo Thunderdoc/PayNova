@@ -451,7 +451,7 @@ export class CoinWalletStoreServer {
         return;
       }
 
-      // POST /api/webhook or /webhook (Signed webhook listener from YOUPI PG)
+      // POST /api/webhook or /webhook (Signed webhook listener from PayNova)
       if ((pathname === '/api/webhook' || pathname === '/webhook') && method === 'POST') {
         let rawBody = '';
         req.on('data', chunk => { rawBody += chunk; });

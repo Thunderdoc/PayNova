@@ -1,6 +1,6 @@
 /**
- * YOUPI PG V2 — Safe Package Synchronization Script
- * Synchronizes from the master repo (repo_clone) to the clean distributable package (YOUPI PG PACKAGE).
+ * PayNova — Safe Package Synchronization Script
+ * Synchronizes from the master repo (repo_clone) to the clean distributable package (PayNova PACKAGE).
  * 
  * Rules:
  * - repo_clone is the sole Source of Truth.
@@ -15,13 +15,13 @@ const path = require('node:path');
 // Root master directory (repo_clone)
 const SOURCE_DIR = path.resolve(__dirname, '..');
 
-// Default target directory: ../YOUPI PG PACKAGE
+// Default target directory: ../PayNova PACKAGE
 const TARGET_DIR = process.env.TARGET_PACKAGE_DIR || 
   process.argv[2] || 
-  path.resolve(SOURCE_DIR, '..', 'YOUPI PG PACKAGE');
+  path.resolve(SOURCE_DIR, '..', 'PayNova PACKAGE');
 
 console.log('============================================================');
-console.log('📦 YOUPI PG V2 — PACKAGE SYNCHRONIZATION');
+console.log('📦 PayNova — PACKAGE SYNCHRONIZATION');
 console.log('============================================================');
 console.log(`[Source Master] : ${SOURCE_DIR}`);
 console.log(`[Target Package]: ${TARGET_DIR}`);

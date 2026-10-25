@@ -1809,7 +1809,7 @@ export function registerCheckoutRoutes(server, ctx) {
     const displayAmount = (Number(session.amountPaise) / 100);
     const businessName = merchant?.businessName || branding.businessName || 'PayNova Technologies';
     const supportEmail = (branding.supportEmails && branding.supportEmails[0]) || 'ankitraj2163@gmail.com';
-    const supportPhone = (branding.supportMobiles && branding.supportMobiles[0]) || '+91 7092620770';
+    const supportPhone = (branding.supportMobiles && branding.supportMobiles[0]) || '';
     const websiteUrl = branding.websiteUrl || 'https://paynova.in';
 
     try {

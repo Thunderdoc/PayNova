@@ -23,7 +23,7 @@ try {
 } catch {}
 
 console.log('====================================================');
-console.log('🚀 Starting YOUPI PG V2 — Production Gateway');
+console.log('🚀 Starting PayNova — Production Gateway');
 console.log('====================================================');
 
 // 1. Run database migrations & load persisted configuration (Part B3: never overwrite settings)
@@ -44,7 +44,7 @@ if (!domain) {
   console.error('Please configure your Cloudflare Domain in the Merchant Admin panel,');
   console.error('or set CLOUDFLARE_DOMAIN in .env before running `npm start`.');
   console.error('');
-  console.error('YOUPI PG V2 adheres to authoritative production mode and will NOT');
+  console.error('PayNova adheres to authoritative production mode and will NOT');
   console.error('silently rewrite or fall back to localhost in production.');
   console.error('================================================================\n');
   process.exit(1);
@@ -88,7 +88,7 @@ console.log('[3/3] Starting core production gateway services (Pure API & Android
 await cc.processManager.startAll();
 
 console.log('====================================================');
-console.log('🟢 YOUPI PG V2 PRODUCTION GATEWAY ONLINE & ACTIVE');
+console.log('🟢 PayNova PRODUCTION GATEWAY ONLINE & ACTIVE');
 console.log('====================================================');
 console.log('AUTHORITATIVE PUBLIC CLOUDFLARE ROUTES:');
 console.log(`• Checkout Portal:      ${runtimeUrls.checkoutUrl}  (-> :7000)`);

@@ -1,7 +1,7 @@
 {
   "name": "control-center",
   "version": "1.0.0",
-  "description": "Native Host Process Supervisor and Operational Control for YOUPI PG",
+  "description": "Native Host Process Supervisor and Operational Control for PayNova",
   "type": "module",
   "main": "./src/index.js",
   "scripts": {

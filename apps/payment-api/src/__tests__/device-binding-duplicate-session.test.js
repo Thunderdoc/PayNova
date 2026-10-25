@@ -4,7 +4,7 @@ import http from 'node:http';
 import { Database, CustomerRepository, PaymentSessionRepository, MerchantRepository } from '@youpi/db';
 import { startServer as startPaymentApi } from '../index.js';
 
-describe('YOUPI PG: Device Binding & Duplicate Session Detection', () => {
+describe('PayNova: Device Binding & Duplicate Session Detection', () => {
   let apiInstance;
   let baseUrl;
   let testDb;

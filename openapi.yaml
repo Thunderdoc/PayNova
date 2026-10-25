@@ -20,7 +20,7 @@ paths:
       summary: Create Payment Session / Order
       description: |
         Initializes a new payment session. Returns the payment identifier and the checkoutUrl
-        to be loaded inside the YOUPI modal iframe or standalone browser window.
+        to be loaded inside the PayNova modal iframe or standalone browser window.
       operationId: createPayment
       parameters:
         - name: X-Merchant-Id
@@ -178,7 +178,7 @@ components:
           example: "https://mystore.example/order-success?orderId=ORDER-1001"
         metadata:
           type: object
-          description: Unmodified custom key-value pairs preserved by YOUPI PG.
+          description: Unmodified custom key-value pairs preserved by PayNova.
           additionalProperties: true
           example:
             product_id: "TSHIRT-01"

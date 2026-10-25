@@ -1,8 +1,9 @@
 /**
- * YOUPI PG V2 — Universal One-Script Integration SDK
+ * PayNova — Universal One-Script Integration SDK
  *
- * Official Distributable Browser Script (youpi.js / youpi-checkout.js)
- * Provides zero-JavaScript button configuration [data-youpi-pay] and programmatic Youpi.pay({...})
+ * Official Distributable Browser Script (paynova.js; legacy: youpi.js / youpi-checkout.js)
+ * Provides zero-JavaScript button configuration [data-paynova-pay] and programmatic PayNova.pay({...})
+ * Legacy aliases [data-youpi-pay] and Youpi.pay still work.
  * Launches the responsive iframe checkout modal with background blur.
  * Emits normalized browser payment events and manages checkout modal lifecycle.
  *
@@ -166,7 +167,7 @@
         return instance;
       }
 
-      // Otherwise, call YOUPI PG to create the payment session
+      // Otherwise, call PayNova to create the payment session
       try {
         const orderId = instance.options.orderId || `ORDER-${Date.now()}`;
         instance.options.orderId = orderId;
@@ -253,14 +254,15 @@
         targetUrl = `${this.options.portalUrl}/checkout/demo`;
       }
 
-      // If running on localhost / 127.0.0.1 and targetUrl points to remote domain, normalize to localhost host
+      // If running on localhost / 127.0.0.1 and targetUrl points to a remote domain, normalize to localhost host
       if (isBrowser && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-        if (targetUrl.includes('gauravtesting.online')) {
-          try {
+        try {
+          const _host = new URL(targetUrl).hostname;
+          if (_host !== 'localhost' && _host !== '127.0.0.1') {
             const parsed = new URL(targetUrl);
             targetUrl = `${window.location.protocol}//${window.location.host}${parsed.pathname}${parsed.search}`;
-          } catch {}
-        }
+          }
+        } catch {}
       }
 
       // Add embedded flag and custom params
@@ -521,11 +523,16 @@
 
     static _emitEvent(name, detail) {
       if (!isBrowser) return;
-      try {
-        const ev = new CustomEvent(name, { detail, bubbles: true, cancelable: true });
-        window.dispatchEvent(ev);
-        document.dispatchEvent(ev);
-      } catch (e) { }
+      // PayNova is the primary event namespace; youpi: is kept as a
+      // backwards-compatible alias for existing integrations.
+      const names = name.startsWith('youpi:') ? [name, 'paynova:' + name.slice('youpi:'.length)] : [name];
+      for (const n of names) {
+        try {
+          const ev = new CustomEvent(n, { detail, bubbles: true, cancelable: true });
+          window.dispatchEvent(ev);
+          document.dispatchEvent(ev);
+        } catch (e) { }
+      }
     }
 
     /**

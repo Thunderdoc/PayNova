@@ -1,0 +1,9 @@
+# PayNova — Checkout Portal (port 7000)
+FROM node:20-alpine
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY packages ./packages
+COPY apps/checkout-portal ./apps/checkout-portal
+RUN npm install --omit=dev --no-audit --no-fund
+EXPOSE 7000
+CMD ["node", "apps/checkout-portal/src/index.js"]

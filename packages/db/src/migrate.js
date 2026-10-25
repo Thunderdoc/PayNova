@@ -112,14 +112,14 @@ export function runMigrations(targetDb) {
   if (existing.length === 0) {
     defaultMerchant = merchantRepo.create({
       id: '00000000-0000-0000-0000-000000000001',
-      businessName: 'YOUPI Demo Store',
+      businessName: 'PayNova Demo Store',
       slug: 'demo-store',
-      contactEmail: 'merchant@youpi.local',
+      contactEmail: 'merchant@paynova.local',
       contactPhone: '9876543210',
       webhookUrl: process.env.COIN_STORE_WEBHOOK_URL || 'http://localhost:5000/api/webhook',
       webhookSecret: process.env.COIN_STORE_WEBHOOK_SECRET || 'merchant_webhook_secret_for_wallet_store',
       branding: {
-        appName: 'YOUPI PG',
+        appName: 'PayNova',
         primaryColor: '#2563eb',
         logoUrl: null
       }
@@ -153,8 +153,8 @@ export function runMigrations(targetDb) {
   if (!existingCust) {
     customerRepo.create({
       id: '00000000-0000-0000-0000-000000000002',
-      name: 'Gaurav Mehra',
-      email: 'gauravmehra09876@gmail.com',
+      name: 'PayNova Demo Customer',
+      email: 'demo@paynova.local',
       mobileNumber: '9212339720',
       isPhoneVerified: true
     });
@@ -183,7 +183,7 @@ export function reinitializeCustomerIdentity(targetDb) {
 
 // Auto-run if executed directly as script
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  console.log('Running YOUPI PG database migrations...');
+  console.log('Running PayNova database migrations...');
   const result = runMigrations();
   console.log(`Migration completed successfully. Default merchant: ${result.defaultMerchant.businessName} (${result.defaultMerchant.id})`);
 }

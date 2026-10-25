@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity() {
             setPadding(16, 0, 8, 0)
         }
         heading.addView(TextView(this).apply {
-            text = "Hackastra Pay"
+            text = "PayNova"
             textSize = 24f
             setTextColor(android.graphics.Color.WHITE)
             setTypeface(null, android.graphics.Typeface.BOLD)
@@ -116,7 +116,7 @@ class MainActivity : AppCompatActivity() {
         layout.addView(btnPermission)
 
         pairingTitle = TextView(this).apply {
-            text = "PAIR WITH QR CODE\nScan the pairing QR from the Hackastra Pay dashboard to connect this device."
+            text = "PAIR WITH QR CODE\nScan the pairing QR from the PayNova dashboard to connect this device."
             textSize = 15f
             setTextColor(android.graphics.Color.parseColor("#D4E4FF"))
             setPadding(24, 24, 24, 12)
@@ -203,13 +203,13 @@ class MainActivity : AppCompatActivity() {
             val payload = data.getStringExtra(QrScannerActivity.EXTRA_QR_PAYLOAD)?.trim().orEmpty()
             val json = org.json.JSONObject(payload)
             if (json.optString("type") != "YOUPI_SMS_GATEWAY_PAIR") {
-                Toast.makeText(this, "Invalid Hackastra pairing QR", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Invalid PayNova pairing QR", Toast.LENGTH_LONG).show()
                 return
             }
             val serverUrl = json.optString("serverUrl", json.optString("gatewayUrl", json.optString("apiBaseUrl", "")))
             val token = json.optString("enrollmentToken", json.optString("token", ""))
             if ((!serverUrl.startsWith("http://") && !serverUrl.startsWith("https://")) || token.isEmpty()) {
-                Toast.makeText(this, "Invalid Hackastra pairing QR", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Invalid PayNova pairing QR", Toast.LENGTH_LONG).show()
                 return
             }
             etBaseUrl.setText(serverUrl)
@@ -223,7 +223,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }.start()
         } catch (_: Exception) {
-            Toast.makeText(this, "Invalid Hackastra pairing QR", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Invalid PayNova pairing QR", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -249,7 +249,7 @@ class MainActivity : AppCompatActivity() {
             heartbeatScheduler.start()
         } else {
             tvDeviceId.text = "DEVICE\nAndroid • ${android.os.Build.MODEL}\nGateway: NOT PAIRED"
-            pairingTitle.text = "PAIR WITH QR CODE\nScan the pairing QR from the Hackastra Pay dashboard to connect this device."
+            pairingTitle.text = "PAIR WITH QR CODE\nScan the pairing QR from the PayNova dashboard to connect this device."
             btnPair.text = "PAIR WITH MERCHANT GATEWAY"
             btnPair.isEnabled = true
             heartbeatScheduler.stop()

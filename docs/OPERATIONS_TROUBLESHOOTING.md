@@ -2,7 +2,7 @@
 
 ## 1. Crash Recovery Mechanics
 
-YOUPI PG's `RecoveryEngine` executes automatically whenever the Payment API process boots:
+PayNova's `RecoveryEngine` executes automatically whenever the Payment API process boots:
 
 ### Automatic Reconciliation Actions
 1. **Overdue `PROCESSING` Sessions:**

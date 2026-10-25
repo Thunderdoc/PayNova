@@ -1,7 +1,7 @@
 # Merchant Integration & Webhook Guide
 
 ## 1. Overview
-The YOUPI PG public contract is designed to be minimal and robust. Merchant systems do not need to understand queue mechanics, five-minute timers, 30-second verification windows, or multi-channel observation.
+The PayNova public contract is designed to be minimal and robust. Merchant systems do not need to understand queue mechanics, five-minute timers, 30-second verification windows, or multi-channel observation.
 
 Merchants interact with only **four public outcomes**:
 - `SUCCESS`: Payment observed and verified.

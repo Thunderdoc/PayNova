@@ -1,0 +1,9 @@
+# PayNova — Payment API (port 6100)
+FROM node:20-alpine
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY packages ./packages
+COPY apps/payment-api ./apps/payment-api
+RUN npm install --omit=dev --no-audit --no-fund
+EXPOSE 6100
+CMD ["node", "apps/payment-api/src/index.js"]

@@ -18,8 +18,8 @@ Traditional Indian payment aggregators (Razorpay, Cashfree, PayU, Paytm) impose:
 3. **Arbitrary Account Freezes:** Unilateral merchant fund withholding and sudden KYC lockdowns.
 4. **Phone Spoofing & Fraud:** Fraudulent orders placed using arbitrary fake phone numbers.
 
-### The YOUPI PG Solution
-YOUPI PG eliminates the aggregator intermediary completely:
+### The PayNova Solution
+PayNova eliminates the aggregator intermediary completely:
 - **0% Transaction Fees Forever:** Payments are settled directly into the merchant's bank account via peer-to-peer (P2P) UPI rails.
 - **Sub-Second Direct Settlement:** Zero holdbacks. Funds land in the merchant's account instantly.
 - **Deterministic Bank Observation:** Uses incoming cellular Bank SMS and Gmail notifications to verify payment credits cryptographically without official banking API licenses.
@@ -30,7 +30,7 @@ YOUPI PG eliminates the aggregator intermediary completely:
 
 ## 2. Core Architectural Invariants
 
-Every subsystem in YOUPI PG adheres to eight strict mathematical and operational invariants:
+Every subsystem in PayNova adheres to eight strict mathematical and operational invariants:
 
 ### Invariant 1 — Deterministic Amount-Only Attribution
 Payment attribution enforces a strict equality invariant:
@@ -69,7 +69,7 @@ The active production persistence layer uses Node.js native `node:sqlite` (`Data
 - Zero Docker container overhead.
 
 ### Invariant 8 — Zero-Config Database Auto-Provisioning
-On first system boot or after cloning, YOUPI PG guarantees zero-config database provisioning:
+On first system boot or after cloning, PayNova guarantees zero-config database provisioning:
 - Automatically detects if `data/youpi_pg.sqlite` and core tables exist (`SELECT count(*) FROM sqlite_master WHERE type='table' AND name='merchants'`).
 - If missing, creates the parent directory `data/` and runs all schema DDL and baseline seeds idempotently before accepting HTTP traffic.
 - Eliminates manual database creation scripts and avoids runtime `SqliteError: no such table` crashes entirely.
@@ -89,7 +89,7 @@ flowchart TB
     subgraph GatewayFrontend["Gateway Frontend Services"]
         CheckoutPortal["Checkout Portal (Port 7000)<br/>• Dynamic Vector UPI QR<br/>• WhatsApp OTP Modal<br/>• Decoupled Dual Timers<br/>• Mobile Bottom Sheet"]
         AdminDashboard["Merchant Admin Panel (Port 6001)<br/>• White-Label Customizer<br/>• Cashier Till Dock<br/>• Live VPA Slot Hub<br/>• WhatsApp Pairing"]
-        DemoStore["YOUPI Showcase Store (Port 5000)<br/>• Enterprise Gateway PDP<br/>• 5 Outcome Demos<br/>• Developer Guide"]
+        DemoStore["PayNova Showcase Store (Port 5000)<br/>• Enterprise Gateway PDP<br/>• 5 Outcome Demos<br/>• Developer Guide"]
     end
 
     subgraph CoreBackend["Payment Core REST Engine (Port 6100)"]
@@ -212,7 +212,7 @@ To prevent phone spoofing, bots, and unauthenticated slot exhaustion, customer i
 ---
 
 ### 4.3 Tri-Channel Banking Observation Engine
-YOUPI PG captures bank credit alerts across three redundant layers:
+PayNova captures bank credit alerts across three redundant layers:
 
 | Layer | Component | Mechanism | Security & Integrity |
 | :--- | :--- | :--- | :--- |
@@ -260,7 +260,7 @@ graph TD
 
 ### 4.5 Universal Merchant Integration (`youpi.js`)
 
-YOUPI PG distributes a single, framework-independent universal browser bundle: [`/youpi.js`](apps/checkout-portal/src/sdk/youpi.js).
+PayNova distributes a single, framework-independent universal browser bundle: [`/youpi.js`](apps/checkout-portal/src/sdk/youpi.js).
 
 #### 1. Zero-JS Declarative Button Embedding
 Merchants add the script and declarative attributes to any HTML button:
@@ -271,7 +271,7 @@ Merchants add the script and declarative attributes to any HTML button:
         data-order-id="ORD-1001"
         data-amount="499.00"
         data-currency="INR">
-  Buy Now with YOUPI PG
+  Buy Now with PayNova
 </button>
 ```
 
@@ -335,7 +335,7 @@ app.post('/api/youpi-webhook', express.raw({ type: 'application/json' }), (req, 
 ---
 
 ### 4.6 5 Standardized Merchant Outcome Pages
-To prevent broken 404 links and inconsistent customer experiences, YOUPI PG provides 5 canonical outcome pages served from Port 5000:
+To prevent broken 404 links and inconsistent customer experiences, PayNova provides 5 canonical outcome pages served from Port 5000:
 1. **`/order-success`:** Confirmed bank credit, displays verified UTR, provisions license/digital product.
 2. **`/order-failed`:** Informs buyer that verification timed out and confirms zero funds were deducted.
 3. **`/order-suspicious`:** Flagged by fraud heuristics; order held for manual merchant audit.
@@ -351,7 +351,7 @@ Configured via Tab 5 of the Merchant Admin dashboard and persisted in `merchants
 - **Custom Accent Color (`--primary`) & Header Gradients**
 - **Trust Badges & Security Sub-banners**
 - **Cloudflare Tunnel Custom Domain Binding (`pay.yourdomain.com`)**
-- **Complete Removal of "Powered by YouPI PG" Attribution**
+- **Complete Removal of "Powered by PayNova" Attribution**
 
 ---
 
@@ -390,7 +390,7 @@ data/youpi_pg.sqlite
 
 ## 7. Verification & Quality Assurance Suite
 
-YOUPI PG enforces zero regression via a unified test runner:
+PayNova enforces zero regression via a unified test runner:
 ```bash
 node scripts/test-all.js
 ```

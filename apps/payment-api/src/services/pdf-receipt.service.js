@@ -61,7 +61,7 @@ export class PdfReceiptService {
         doc.rect(margin, margin, contentWidth, 72)
           .fill('#062B63');
 
-        // Draw Hackastra Shield with Capital H on Left
+        // Draw PayNova Shield with Capital P on Left
         const shieldX = margin + 16;
         const shieldY = margin + 14;
         const sW = 38;
@@ -74,7 +74,7 @@ export class PdfReceiptService {
         doc.fillColor('#ffffff')
           .font('Helvetica-Bold')
           .fontSize(20)
-          .text('H', shieldX, shieldY + 12, { width: sW, align: 'center' });
+          .text('P', shieldX, shieldY + 12, { width: sW, align: 'center' });
         doc.restore();
 
         // Company Title & Tagline
@@ -330,7 +330,7 @@ export class PdfReceiptService {
 
   /**
    * Generates a high-resolution printable A4 counter standee (PDF)
-   * With Hackastra Private Limited branding, QR scan frame, and supported UPI apps
+   * With PayNova branding, QR scan frame, and supported UPI apps
    * @param {Object} data
    * @returns {Promise<Buffer>}
    */
@@ -431,7 +431,7 @@ export class PdfReceiptService {
         doc.fillColor('#ffffff')
           .font('Helvetica')
           .fontSize(9)
-          .text(`Secure UPI payment processing  •  Verified payment status  •  Support: ${supportPhone}${websiteUrl ? `  •  ${websiteUrl}` : ''}`, margin, pageHeight - 35, { align: 'center', width: contentWidth });
+          .text(`Secure UPI payment processing  •  Verified payment status${supportPhone ? `  •  Support: ${supportPhone}` : ''}${websiteUrl ? `  •  ${websiteUrl}` : ''}`, margin, pageHeight - 35, { align: 'center', width: contentWidth });
 
         doc.end();
       } catch (err) {

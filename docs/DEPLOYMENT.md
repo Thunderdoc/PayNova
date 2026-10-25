@@ -1,6 +1,6 @@
-# YOUPI PG V2 — Deployment & Installation Guide
+# PayNova — Deployment & Installation Guide
 
-This document describes how to deploy and run the clean distributable **YOUPI PG V2** package.
+This document describes how to deploy and run the clean distributable **PayNova** package.
 
 ---
 
@@ -25,7 +25,7 @@ This document describes how to deploy and run the clean distributable **YOUPI PG
 ### Step 1: Extract / Clone Package
 Ensure you are in the package root directory:
 ```bash
-cd "YOUPI PG PACKAGE"
+cd "PayNova PACKAGE"
 ```
 
 ### Step 2: Configure Environment
@@ -72,7 +72,7 @@ Starts services in background daemon mode.
 1. **Checkout Portal & SDK**:
    Open `http://localhost:7000/youpi.js` — you should see the official JavaScript SDK.
 2. **Demo Store**:
-   Open `http://localhost:5000` — you should see the reference YOUPI Store with the interactive buy button and Developer Guide.
+   Open `http://localhost:5000` — you should see the reference PayNova Store with the interactive buy button and Developer Guide.
 3. **Merchant Admin**:
    Open `http://localhost:6001` and log in with your admin credentials from `.env`.
    Configure your active UPI ID and payee name in the Receiving Accounts tab.

@@ -68,7 +68,7 @@ function astrapay_gateway_init() {
                 'merchant_id' => array(
                     'title'       => __('Merchant ID', 'woocommerce'),
                     'type'        => 'text',
-                    'description' => __('Your Hackastra Merchant UUID.', 'woocommerce'),
+                    'description' => __('Your PayNova Merchant UUID.', 'woocommerce'),
                     'default'     => '00000000-0000-0000-0000-000000000001',
                 )
             );

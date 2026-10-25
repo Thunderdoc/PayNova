@@ -9,7 +9,7 @@ import android.util.Log
 /**
  * BroadcastReceiver listening for incoming SMS on the Android device.
  * Automatically extracts the bank SMS body, sender, and timestamp,
- * and securely forwards it to the paired Hackastra Pay Gateway.
+ * and securely forwards it to the paired PayNova Gateway.
  */
 class SmsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -39,7 +39,7 @@ class SmsReceiver : BroadcastReceiver() {
 
                 Thread {
                     val success = apiClient.sendObservation(parsed)
-                    Log.d("SmsReceiver", "Dispatched payment observation to Hackastra Pay: success=$success")
+                    Log.d("SmsReceiver", "Dispatched payment observation to PayNova: success=$success")
                 }.start()
             }
         }

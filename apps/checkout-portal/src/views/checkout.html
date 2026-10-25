@@ -74,7 +74,7 @@
       overflow: hidden;
     }
 
-    /* --- YOUPI PG CARD / DRAWER CONTAINER --- */
+    /* --- PayNova CARD / DRAWER CONTAINER --- */
     .ypg-wrapper {
       width: 100%;
       max-width: 440px;
@@ -634,7 +634,7 @@
       }
     }
 
-    /* --- 2. AUTHENTIC YOUPI PG HEADER --- */
+    /* --- 2. AUTHENTIC PayNova HEADER --- */
     .ypg-header {
       background: var(--ypg-header-gradient);
       color: #ffffff;
@@ -722,7 +722,7 @@
       line-height: 1.25;
     }
 
-    /* YouPI PG Verified Business Badge */
+    /* PayNova Verified Business Badge */
     .ypg-trusted-badge {
       display: flex;
       align-items: center;
@@ -3776,7 +3776,7 @@
   <!-- TOAST NOTIFICATION -->
   <div id="ypgToast" class="ypg-toast"><img src="/icons/upi.svg" alt="UPI" style="height:12px; vertical-align:middle; filter:brightness(0) invert(1); margin-right:4px;" /> Direct UPI QR is active for instant banking verification</div>
 
-  <!-- YOUPI PG CHECKOUT CARD / DRAWER WRAPPER -->
+  <!-- PayNova CHECKOUT CARD / DRAWER WRAPPER -->
   <div class="ypg-wrapper">
 
     <!-- 1. INITIAL PayNova PREMIUM CHECKOUT LOADER -->
@@ -3835,7 +3835,7 @@
           <div class="hk-particle hk-particle-2"></div>
           <div class="hk-particle hk-particle-3"></div>
 
-          <!-- Core Blue Shield with White Capital 'H' -->
+          <!-- Core Blue Shield with White Capital 'P' -->
           <div class="hk-shield-core">
             <img id="splashBrandLogo" alt="Logo"
               style="display:none; max-width:82px; max-height:82px; border-radius:16px; object-fit:contain; box-shadow:0 8px 24px rgba(0,0,0,0.12);" />
@@ -3878,11 +3878,8 @@
                 fill="#ffffff"
                 fill-opacity="0.08" />
 
-              <!-- Bold, pure white capital 'H' -->
-              <!-- Left leg, right leg, and crossbar -->
-              <path d="M30 35 H41 V54 H59 V35 H70 V85 H59 V64 H41 V85 H30 Z"
-                fill="#ffffff"
-                filter="drop-shadow(0 2px 4px rgba(7, 71, 166, 0.45))" />
+              <!-- Bold, pure white capital 'P' -->
+              <text x="50" y="84" font-size="48" font-weight="900" fill="#ffffff" text-anchor="middle" font-family="Inter, sans-serif" filter="drop-shadow(0 2px 4px rgba(7, 71, 166, 0.45))">P</text>
 
               <!-- Dynamic soft light sweep overlay on the shield -->
               <g clip-path="url(#hkShieldClip)">
@@ -3973,7 +3970,7 @@
         <!-- PayNova Brand Lettermark & Shield Header -->
         <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
           <div style="width:40px; height:44px; background:linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); border-radius:8px 8px 18px 18px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(14,165,233,0.35); flex-shrink:0;">
-            <span style="color:#ffffff; font-weight:900; font-size:22px; font-family:'Inter', sans-serif;">H</span>
+            <span style="color:#ffffff; font-weight:900; font-size:22px; font-family:'Inter', sans-serif;">P</span>
           </div>
           <div>
             <div style="font-weight:900; font-size:14px; letter-spacing:0.02em; color:#ffffff; line-height:1.2;" id="pcMerchantName">PAYNOVA TECHNOLOGIES</div>
@@ -4057,7 +4054,7 @@
         </div>
       </div>
 
-      <!-- 2. AUTHENTIC YOUPI PG HEADER -->
+      <!-- 2. AUTHENTIC PayNova HEADER -->
       <header class="ypg-header">
         <!-- Mobile Top Drag Handle -->
         <div class="ypg-drag-handle-bar"></div>
@@ -4079,7 +4076,7 @@
               <img id="merchantAvatarImg" alt="Logo" style="display:none;" />
             </div>
 
-            <!-- Merchant Name & YouPI PG Verified Business Badge -->
+            <!-- Merchant Name & PayNova Verified Business Badge -->
             <div class="ypg-merchant-text-group">
               <div class="ypg-merchant-name" id="headerMerchantName">{{MERCHANT_NAME}}</div>
               <div class="ypg-trusted-badge" id="headerTrustBadge">
@@ -4225,13 +4222,13 @@
 
               <div class="ypg-input-group">
                 <label class="ypg-input-label">Full Name</label>
-                <input type="text" class="ypg-input-control" id="authSignupName" placeholder="e.g. Gaurav Sharma" />
+                <input type="text" class="ypg-input-control" id="authSignupName" placeholder="e.g. Your Name" />
               </div>
 
               <div class="ypg-input-group">
                 <label class="ypg-input-label">Email Address</label>
                 <input type="email" class="ypg-input-control" id="authSignupEmail"
-                  placeholder="e.g. gaurav@example.com" />
+                  placeholder="e.g. you@example.com" />
               </div>
 
               <button type="button" class="ypg-btn-auth-action" id="btnAuthSignup" onclick="handleAuthSignupSubmit()">
@@ -6742,7 +6739,7 @@
       const headerLetterSpan = document.getElementById('merchantAvatarLetter');
 
       const showFallbackLetter = () => {
-        const letter = (data.merchantName || 'H').charAt(0).toUpperCase();
+        const letter = (data.merchantName || 'P').charAt(0).toUpperCase();
         if (pcLogoImg) pcLogoImg.style.display = 'none';
         if (pcLetterSpan) {
           pcLetterSpan.style.display = 'block';

@@ -1,8 +1,9 @@
 /**
- * YOUPI PG V2 — Universal One-Script Integration SDK
+ * PayNova — Universal One-Script Integration SDK
  *
- * Official Distributable Browser Script (youpi.js / youpi-checkout.js)
- * Provides zero-JavaScript button configuration [data-youpi-pay] and programmatic Youpi.pay({...})
+ * Official Distributable Browser Script (paynova.js; legacy: youpi.js / youpi-checkout.js)
+ * Provides zero-JavaScript button configuration [data-paynova-pay] and programmatic PayNova.pay({...})
+ * Legacy aliases [data-youpi-pay] and Youpi.pay still work.
  * Launches the responsive iframe checkout modal with background blur.
  * Emits normalized browser payment events and manages checkout modal lifecycle.
  *
@@ -166,7 +167,7 @@
         return instance;
       }
 
-      // Otherwise, call YOUPI PG to create the payment session
+      // Otherwise, call PayNova to create the payment session
       try {
         const orderId = instance.options.orderId || `ORDER-${Date.now()}`;
         instance.options.orderId = orderId;
@@ -511,11 +512,16 @@
 
     static _emitEvent(name, detail) {
       if (!isBrowser) return;
-      try {
-        const ev = new CustomEvent(name, { detail, bubbles: true, cancelable: true });
-        window.dispatchEvent(ev);
-        document.dispatchEvent(ev);
-      } catch (e) { }
+      // PayNova is the primary event namespace; youpi: is kept as a
+      // backwards-compatible alias for existing integrations.
+      const names = name.startsWith('youpi:') ? [name, 'paynova:' + name.slice('youpi:'.length)] : [name];
+      for (const n of names) {
+        try {
+          const ev = new CustomEvent(n, { detail, bubbles: true, cancelable: true });
+          window.dispatchEvent(ev);
+          document.dispatchEvent(ev);
+        } catch (e) { }
+      }
     }
 
     /**

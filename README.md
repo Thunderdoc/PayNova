@@ -45,18 +45,18 @@
 
 <br/>
 
-## 🎬 Live Product Demos
+## 🎬 Product Demo
 
-See **PayNova** live in action across Desktop and Mobile checkout flows:
+PayNova UI walkthrough — store, checkout, merchant operations and integration guide, captured from the current PayNova build (the previous recordings showed the old YOUPI branding and were replaced):
 
 | 🖥️ Desktop Modal Flow | 📱 Mobile Drawer & App Switcher |
 | :---: | :---: |
-| <img src="assets/desktop-demo.gif" width="100%" alt="Desktop Checkout Demo" /><br/><sub>*Full end-to-end checkout: One-script modal, WhatsApp OTP, dynamic vector QR & bank observation.*</sub> | <img src="assets/mobile-demo.gif" width="60%" alt="Mobile Checkout Demo" /><br/><sub>*Ultra-responsive bottom drawer with 1-tap deep-link intent for GPay, PhonePe, Paytm & CRED.*</sub> |
-| • **Zero-JS One-Script Trigger**: Auto-binds to `[data-youpi-pay]`<br/>• **WhatsApp Pre-Checkout OTP**: Real-time 6-digit phone verification<br/>• **Dynamic Vector SVG QR**: Pure vector QR code with dual timers<br/>• **Automated Observer Credit**: Instant credit via bank SMS/Gmail | • **Responsive Bottom Drawer**: Native app-feel mobile UI<br/>• **Direct UPI App Deep-Linking**: GPay, PhonePe, Paytm, CRED<br/>• **Real-Time Payment Polling**: Instant status reflection<br/>• **Counter Desk Modalities**: Configurable Cash & Card fallback |
+| <img src="assets/desktop-demo.gif" width="100%" alt="Desktop Checkout Demo" /><br/><sub>*Store, checkout loader, merchant operations and integration guide.*</sub> | <img src="assets/mobile-demo.gif" width="60%" alt="Mobile Checkout Demo" /><br/><sub>*Mobile store and checkout views.*</sub> |
+| • **Zero-JS One-Script Trigger**: Auto-binds to `[data-paynova-pay]`<br/>• **WhatsApp Pre-Checkout OTP**: Real-time 6-digit phone verification<br/>• **Dynamic Vector SVG QR**: Pure vector QR code with dual timers<br/>• **Automated Observer Credit**: Instant credit via bank SMS/Gmail | • **Responsive Bottom Drawer**: Native app-feel mobile UI<br/>• **Direct UPI App Deep-Linking**: GPay, PhonePe, Paytm, CRED<br/>• **Real-Time Payment Polling**: Instant status reflection<br/>• **Counter Desk Modalities**: Configurable Cash & Card fallback |
 
 <br/>
 
-> **High-Definition 120FPS Raw Recordings**: [assets/Desktop.mp4](assets/Desktop.mp4) • [assets/Mobile.mp4](assets/Mobile.mp4)
+> **Demo videos (same walkthrough, MP4)**: [assets/Desktop.mp4](assets/Desktop.mp4) • [assets/Mobile.mp4](assets/Mobile.mp4)
 
 <br/>
 
@@ -111,7 +111,7 @@ flowchart LR
     end
 
     Buyer -->|Clicks Checkout| Cart
-    Cart -->|youpi.js Embed| AuthGate
+    Cart -->|paynova.js Embed| AuthGate
     AuthGate -->|Verified| Queue
     Queue -->|Active Slot| VectorQR
     VectorQR -->|Displays Dynamic QR| Buyer
@@ -140,7 +140,7 @@ Every rupee paid goes straight from your customer's bank account to your bank ac
 No more fake orders, bot spam, or fraudulent phone numbers. Before a customer can enter the checkout queue, the gateway delivers a cryptographically random 6-digit OTP directly to their WhatsApp app using the embedded Baileys/Berry Protocol socket. Verified customer profiles are remembered in browser `localStorage`.
 
 ### 3. 🔒 Deterministic Single-Slot FIFO Queue Engine
-Because standard UPI alerts do not carry arbitrary merchant metadata, multiple concurrent transactions with identical amounts could create attribution confusion. YOUPI PG solves this with a mathematical invariant:
+Because standard UPI alerts do not carry arbitrary merchant metadata, multiple concurrent transactions with identical amounts could create attribution confusion. PayNova solves this with a mathematical invariant:
 - **Only ONE customer can pay on a VPA at a time.**
 - Other buyers wait in a database-backed FIFO queue with live position streaming.
 - Guarantees **100% exact payment matching** with zero payment mismatch errors!
@@ -165,7 +165,7 @@ Rebrand the checkout portal completely through the Merchant Admin Panel:
 - Custom app name, logo URL, and browser favicon.
 - Tailored color palettes, custom gradients, and trust badges.
 - Custom domain binding via Cloudflare Tunnels (`pay.yourbrand.com`).
-- Complete removal of any "Powered by YouPI PG" attribution.
+- Complete removal of any "Powered by PayNova" attribution.
 
 ### 8. 🚦 5 Standardized Merchant Outcome Pages
 Never leave customers hanging with blank screens or 404 errors:
@@ -189,7 +189,7 @@ Never leave customers hanging with blank screens or 404 errors:
 ### 1. Clone & Install Dependencies
 Standard `npm install` works out-of-the-box across all packages and apps without any protocol issues:
 ```bash
-git clone https://github.com/gxurav1710/PayNova.git paynova
+git clone https://github.com/Thunderdoc/PayNova.git paynova
 cd paynova
 npm install
 ```
@@ -201,7 +201,7 @@ cp .env.example .env
 *(The default `.env` is pre-configured for localhost out of the box).*
 
 ### 3. Zero-Config Launch (Auto-Initialized SQLite)
-On first launch, YOUPI PG automatically provisions `data/youpi_pg.sqlite`, creates the directory if missing, and executes idempotent migrations and baseline seeds. No manual database setup is required:
+On first launch, PayNova automatically provisions `data/youpi_pg.sqlite`, creates the directory if missing, and executes idempotent migrations and baseline seeds. No manual database setup is required:
 ```bash
 npm run dev
 # or
@@ -222,7 +222,7 @@ npm test
 ```
 ```text
 ============================================================
-🧪 YOUPI PG V2 — FULL REGRESSION TEST RUNNER
+🧪 PayNova — FULL REGRESSION TEST RUNNER
 Running 31 curated test suites...
 ============================================================
 [1/31] Testing packages/common/src/__tests__/common.test.js... ✅ PASS (0.22s)
@@ -239,32 +239,34 @@ Running 31 curated test suites...
 
 ## 📦 Universal Merchant Integration
 
-Integrating YOUPI PG into your website, web app, or e-commerce store takes less than 5 minutes.
+Integrating PayNova into your website, web app, or e-commerce store takes less than 5 minutes.
 
 ### Step 1: Add the Universal Script to your `<head>`
 ```html
-<!-- Official YOUPI PG Universal Integration Script -->
-<script src="https://pay.yourdomain.com/youpi.js" 
-        data-youpi-key="YOUR_MERCHANT_PUBLIC_KEY" 
+<!-- Official PayNova Universal Integration Script -->
+<script src="https://pay.yourdomain.com/paynova.js" 
+        data-paynova-key="YOUR_MERCHANT_PUBLIC_KEY" 
         data-currency="INR">
 </script>
 ```
 
+> Legacy aliases still work: `youpi.js`, `data-youpi-pay`, and `Youpi.pay` are kept for existing integrations.
+
 ### Step 2: Declarative Button (Zero JavaScript Required!)
-Add `data-youpi-pay` attributes to any existing HTML button:
+Add `data-paynova-pay` attributes to any existing HTML button:
 ```html
-<button data-youpi-pay
+<button data-paynova-pay
         data-order-id="ORDER-1001"
         data-amount="499.00"
         data-currency="INR">
-  ⚡ Buy Now with YOUPI PG
+  ⚡ Buy Now with PayNova
 </button>
 ```
 *The script automatically intercepts the click, opens a centered desktop modal (or mobile slide-up bottom sheet), and launches the checkout session!*
 
 ### Step 3: Programmatic API (For React, Vue, Next.js, Nuxt)
 ```javascript
-window.Youpi.pay({
+window.PayNova.pay({
   order_id: 'ORDER-1001',
   amount: 499.00,
   currency: 'INR',
@@ -423,7 +425,7 @@ func youpiWebhookHandler(w http.ResponseWriter, r *http.Request) {
 
 ## 🔭 Tri-Channel Observation Mesh
 
-YOUPI PG confirms payments without expensive commercial banking APIs using a triple-layer observation pipeline:
+PayNova confirms payments without expensive commercial banking APIs using a triple-layer observation pipeline:
 
 ```text
               CUSTOMER SCANS & PAYS VIA UPI

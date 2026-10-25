@@ -76,7 +76,7 @@ describe('Coin Top-Up Wallet Demo Store Integration Tests', () => {
     assert.equal(res.body.coins, 50);
   });
 
-  test('GET / renders YOUPI Store product page with gateway showcase and demo checkout', async () => {
+  test('GET / renders PayNova Store product page with gateway showcase and demo checkout', async () => {
     const res = await request('/');
     assert.equal(res.status, 200);
     assert.ok(res.body.includes('Self-Hosted UPI Payment Gateway'));
@@ -160,7 +160,7 @@ describe('Coin Top-Up Wallet Demo Store Integration Tests', () => {
   test('GET /wallet renders wallet page with updated balance', async () => {
     const res = await request('/wallet?orderId=COIN-ORD-555');
     assert.equal(res.status, 200);
-    assert.ok(res.body.includes('Customer Account') || res.body.includes('YOUPI Store'));
+    assert.ok(res.body.includes('Customer Account') || res.body.includes('PayNova Store'));
     assert.ok(res.body.includes('Top-Up Successful!'));
     assert.ok(res.body.includes('Current Vault Balance'));
   });

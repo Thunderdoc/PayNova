@@ -1,4 +1,4 @@
--- PostgreSQL Schema for Hackastra Pay
+-- PostgreSQL Schema for PayNova
 -- Canonical Production Schema
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS merchants (
     contact_phone VARCHAR(20) NOT NULL,
     webhook_url VARCHAR(1024),
     webhook_secret VARCHAR(255) NOT NULL,
-    branding TEXT NOT NULL DEFAULT '{"primaryColor":"#2563eb","appName":"Hackastra Pay","logoUrl":null}',
+    branding TEXT NOT NULL DEFAULT '{"primaryColor":"#2563eb","appName":"PayNova","logoUrl":null}',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

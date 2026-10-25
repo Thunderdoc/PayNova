@@ -1,0 +1,9 @@
+# PayNova — Merchant Admin (port 6001)
+FROM node:20-alpine
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY packages ./packages
+COPY apps/merchant-admin ./apps/merchant-admin
+RUN npm install --omit=dev --no-audit --no-fund
+EXPOSE 6001
+CMD ["node", "apps/merchant-admin/src/index.js"]

@@ -69,7 +69,7 @@ async function runTestSuite() {
     console.log('=== TEST 1: Check Initiated Session - Sign in to Pay with Single Saved Account ===');
     await evaluate(`
       localStorage.setItem('youpi.customer.accounts', JSON.stringify([
-        { id: '74879c31-ea68-427a-87a6-a02d08109afd', name: 'Gaurav Mehra', email: 'gauravmehra09876@gmail.com', mobileNumber: '9212339720' }
+        { id: '74879c31-ea68-427a-87a6-a02d08109afd', name: 'PayNova Demo Customer', email: 'demo@paynova.local', mobileNumber: '9212339720' }
       ]));
       renderSavedAccountsUI();
     `);
@@ -98,9 +98,9 @@ async function runTestSuite() {
     await evaluate(`
       const cust = {
         id: '74879c31-ea68-427a-87a6-a02d08109afd',
-        name: 'Gaurav Mehra',
-        fullName: 'Gaurav Mehra',
-        email: 'gauravmehra09876@gmail.com',
+        name: 'PayNova Demo Customer',
+        fullName: 'PayNova Demo Customer',
+        email: 'demo@paynova.local',
         mobileNumber: '9212339720'
       };
       const token = 'csess_d145cc98752c919be77306be94545332982b8bced1f0be5262d8ce97e798ac1d';
@@ -122,7 +122,7 @@ async function runTestSuite() {
     `);
     console.log('preGatewayAuthView hidden (auto-login bypassed):', authViewHidden, '(Expected: true)');
     console.log('paymentGatewayInterface visible:', paymentViewVisible, '(Expected: true)');
-    console.log('Left sidebar text:', pcSidebarText, '(Expected: Using as Gaurav Mehra (+91 9212339720))');
+    console.log('Left sidebar text:', pcSidebarText, '(Expected: Using as PayNova Demo Customer (+91 9212339720))');
 
     const shot2 = await sendCommand('Page.captureScreenshot', { format: 'png' });
     fs.writeFileSync('test_initiated_session_auto_login.png', Buffer.from(shot2.data, 'base64'));
@@ -142,7 +142,7 @@ async function runTestSuite() {
       document.getElementById('popoverCustomerNamePc')?.textContent;
     `);
     console.log('accountMenuPopoverPc visible:', popoverPcVisible, '(Expected: true)');
-    console.log('Popover user name text:', popoverPcName, '(Expected: Gaurav Mehra (9212339720))');
+    console.log('Popover user name text:', popoverPcName, '(Expected: PayNova Demo Customer (9212339720))');
 
     const shot3 = await sendCommand('Page.captureScreenshot', { format: 'png' });
     fs.writeFileSync('test_initiated_session_popover.png', Buffer.from(shot3.data, 'base64'));

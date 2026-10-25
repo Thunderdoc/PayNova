@@ -12,7 +12,7 @@ import {
 } from '@youpi/common';
 import { Database, runMigrations, MerchantRepository, DeviceRepository } from '@youpi/db';
 
-describe('YOUPI PG V2 — Production Infrastructure Finalization (Part L Acceptance Tests)', () => {
+describe('PayNova — Production Infrastructure Finalization (Part L Acceptance Tests)', () => {
   // ============================================================
   // GROUP 1: CLOUDFLARE TUNNEL CONFIGURATION (Acceptance 1 - 12)
   // ============================================================

@@ -1,7 +1,7 @@
 {
   "name": "android-observer-app",
   "version": "1.0.0",
-  "description": "Native Android Payment Notification Observer App & Companion Driver for YOUPI PG",
+  "description": "Native Android Payment Notification Observer App & Companion Driver for PayNova",
   "type": "module",
   "main": "./driver.js",
   "scripts": {

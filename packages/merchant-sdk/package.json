@@ -1,7 +1,7 @@
 {
   "name": "@youpi/merchant-sdk",
   "version": "1.0.0",
-  "description": "Developer SDK and client library for integrating with YOUPI PG",
+  "description": "Developer SDK and client library for integrating with PayNova",
   "type": "module",
   "main": "./src/index.js",
   "scripts": {

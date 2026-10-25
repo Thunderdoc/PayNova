@@ -78,7 +78,7 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
         controls.setPadding(28, 48, 28, 20);
 
         TextView tvTitle = new TextView(this);
-        tvTitle.setText("Hackastra Pay  •  Pair device");
+        tvTitle.setText("PayNova  •  Pair device");
         tvTitle.setTextColor(Color.WHITE);
         tvTitle.setTextSize(22f);
         tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);

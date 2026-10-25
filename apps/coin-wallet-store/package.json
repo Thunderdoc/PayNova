@@ -1,7 +1,7 @@
 {
   "name": "coin-wallet-store",
   "version": "1.0.0",
-  "description": "YOUPI Store — Official Gateway Showcase & E-Commerce Demo Store integrated with YOUPI PG",
+  "description": "PayNova Store — Official Gateway Showcase & E-Commerce Demo Store integrated with PayNova",
   "type": "module",
   "main": "./src/index.js",
   "scripts": {

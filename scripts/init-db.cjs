@@ -3,7 +3,7 @@ const fs = require('node:fs');
 
 async function main() {
   console.log('============================================================');
-  console.log('📦 YOUPI PG — DATABASE INITIALIZATION / SETUP');
+  console.log('📦 PayNova — DATABASE INITIALIZATION / SETUP');
   console.log('============================================================');
 
   const rootDir = path.resolve(__dirname, '..');

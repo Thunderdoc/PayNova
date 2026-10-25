@@ -1,13 +1,13 @@
 # AGENTS.md — Integration Guide for AI Coding Agents
 
-> **Audience**: AI Coding Agents & Pair Programmers integrating YOUPI PG V2 into developer applications.  
-> **Purpose**: Authoritative reference on the YOUPI payment lifecycle, one-script frontend integration, browser events, and server-to-server webhook verification.
+> **Audience**: AI Coding Agents & Pair Programmers integrating PayNova into developer applications.  
+> **Purpose**: Authoritative reference on the PayNova payment lifecycle, one-script frontend integration, browser events, and server-to-server webhook verification.
 
 ---
 
 ## 1. High-Level Architecture
 
-YOUPI PG V2 is a self-hosted, sovereign payment gateway designed for zero-fee UPI and counter payments with automated banking observation (SMS & Gmail parsing).
+PayNova is a self-hosted, sovereign payment gateway designed for zero-fee UPI and counter payments with automated banking observation (SMS & Gmail parsing).
 
 ```
   [ Merchant Website / App ]
@@ -16,7 +16,7 @@ YOUPI PG V2 is a self-hosted, sovereign payment gateway designed for zero-fee UP
               │
     (2) Maps payment button: <button data-youpi-pay data-order-id="..." data-amount="...">
               │
-    (3) YOUPI JS dims/blurs background & renders centered responsive modal (or mobile sheet)
+    (3) PayNova JS dims/blurs background & renders centered responsive modal (or mobile sheet)
               │
     (4) Existing iframe loads /checkout/:id with dynamic single-use QR and UPI intent
               │
@@ -44,12 +44,12 @@ Place the script tag in the page's HTML `<head>` or `<body>`:
 
 ```html
 <script 
-  src="https://<youpi-checkout-host>/youpi.js" 
-  data-youpi-key="YOUR_MERCHANT_KEY">
+  src="https://<paynova-checkout-host>/paynova.js" 
+  data-paynova-key="YOUR_MERCHANT_KEY">
 </script>
 ```
 
-- When running locally, `<youpi-checkout-host>` is `http://localhost:7000`.
+- When running locally, `<paynova-checkout-host>` is `http://localhost:7000`.
 - In production, it is your canonical checkout portal domain (e.g., `https://pay.yourdomain.com`).
 
 ### Step 2: One-Button Zero-JS Configuration
@@ -57,7 +57,7 @@ Tag any clickable button with `data-youpi-pay`:
 
 ```html
 <button 
-  data-youpi-pay 
+  data-paynova-pay 
   data-order-id="ORDER-1001" 
   data-amount="499"
   data-currency="INR"
@@ -69,13 +69,13 @@ Tag any clickable button with `data-youpi-pay`:
 </button>
 ```
 
-The script automatically binds click events to elements with `[data-youpi-pay]`, including elements created dynamically at runtime.
+The script automatically binds click events to elements with `[data-paynova-pay]`, including elements created dynamically at runtime.
 
-### Step 3: Programmatic API (`Youpi.pay`)
+### Step 3: Programmatic API (`PayNova.pay`)
 For single-page apps (React, Next.js, Vue, Nuxt, Svelte), use the programmatic interface:
 
 ```javascript
-Youpi.pay({
+PayNova.pay({
   order_id: "ORDER-1001",
   amount: 499.00,
   currency: "INR",
@@ -99,6 +99,8 @@ Youpi.pay({
 ```
 
 ---
+
+> Legacy aliases still work: `youpi.js`, `data-youpi-pay`, and `Youpi.pay` are kept for existing integrations.
 
 ## 3. Normalized Browser Events
 
@@ -295,7 +297,7 @@ func youpiWebhookHandler(w http.ResponseWriter, r *http.Request) {
    - There is no endpoint that allows a client or developer to arbitrarily declare `SUCCESS`.
    - `SUCCESS` is generated solely by the internal verification engine after matching a genuine bank SMS/Gmail observation.
 2. **Never Expose Secret API Keys in Frontend**:
-   - Only publishable public keys (e.g., `data-youpi-key`) may appear in HTML/JS.
+   - Only publishable public keys (e.g., `data-paynova-key`) may appear in HTML/JS.
    - `webhookSecret`, database credentials, and observer tokens must remain strictly on the backend.
 3. **Idempotency & Deduplication**:
    - Webhook deliveries include unique `X-Gateway-Delivery-Id` and `orderId`. Merchants must ensure their webhook processing is idempotent.
@@ -310,7 +312,7 @@ func youpiWebhookHandler(w http.ResponseWriter, r *http.Request) {
 | :--- | :--- | :--- |
 | **Coin Wallet Demo Store** | `5000` | Reference merchant implementation & store |
 | **Payment Core REST API** | `6100` | Core gateway engine, state machine, queue |
-| **Checkout Portal** | `7000` | Serves `youpi.js`, iframe `/checkout/:id`, API proxy |
+| **Checkout Portal** | `7000` | Serves `paynova.js`, iframe `/checkout/:id`, API proxy |
 | **Merchant Admin** | `6001` | Dashboard for slots, receiving VPAs, observers |
 | **SMS Observer** | `6002` | Android SMS banking webhook ingester |
 | **Gmail Observer** | `6003` | Push notification / Gmail observation ingester |

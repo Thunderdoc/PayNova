@@ -1,7 +1,7 @@
 {
   "name": "@youpi/core",
   "version": "1.0.0",
-  "description": "Payment core state machine, observation normalizer, and attribution engine for YOUPI PG",
+  "description": "Payment core state machine, observation normalizer, and attribution engine for PayNova",
   "type": "module",
   "main": "./src/index.js",
   "scripts": {

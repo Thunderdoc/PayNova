@@ -551,6 +551,18 @@ export class WhatsAppBerryService extends EventEmitter {
     if (clean.length === 10) clean = '91' + clean;
     else if (clean.length === 11 && clean.startsWith('0')) clean = '91' + clean.slice(1);
 
+    // Test guardrail (same pattern as sendOtp/sendMessage): in test mode,
+    // never dial real WhatsApp servers for a pairing code. The previous
+    // code only mocked when BerryProtocol failed to load, so a loaded
+    // engine tried a real connection and timed out (500) in test/sandbox.
+    if (process.env.NODE_ENV === 'test' && !this.forceRealDispatch) {
+      const mockCode = `${Math.floor(1000 + Math.random() * 9000)}${Math.floor(1000 + Math.random() * 9000)}`;
+      this.pairingCode = mockCode;
+      this.pairingPhone = clean;
+      this.status = 'PAIRING_CODE_READY';
+      return { success: true, pairingCode: mockCode, phoneNumber: clean };
+    }
+
     await this.disconnect({ cleanSession: true });
     this.ensureDirectories();
 

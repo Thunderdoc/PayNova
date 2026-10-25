@@ -62,7 +62,7 @@
         <!-- Notification Listener Service for UPI Apps -->
         <service
             android:name="com.youpi.observer.PaymentNotificationListenerService"
-            android:label="Hackastra Pay Payment Observer"
+            android:label="PayNova Payment Observer"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
             android:exported="true">
             <intent-filter>

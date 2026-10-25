@@ -6,8 +6,8 @@
   <title>PAYNOVA Store · Enterprise Payment Gateway Suite</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <!-- OFFICIAL YOUPI PG UNIVERSAL INTEGRATION SCRIPT -->
-  <script src="/youpi.js" data-youpi-key="00000000-0000-0000-0000-000000000001" data-currency="INR"></script>
+  <!-- OFFICIAL PayNova UNIVERSAL INTEGRATION SCRIPT -->
+  <script src="/paynova.js" data-paynova-key="00000000-0000-0000-0000-000000000001" data-currency="INR"></script>
 
   <style>
     :root {
@@ -1070,7 +1070,7 @@
           <button type="button"
                   class="btn-buy-primary"
                   id="btnInitiateCheckout"
-                  data-youpi-pay
+                  data-paynova-pay
                   data-order-id=""
                   data-amount="1.00"
                   data-currency="INR"
@@ -1448,10 +1448,10 @@
         <p style="color:#cbd5e1; font-size:0.92rem; margin-bottom:1rem; line-height:1.5;">
           Place this single script tag in your HTML. It automatically provides modal checkout, responsive iframe sizing, and button auto-detection.
         </p>
-        <pre style="background:#0b1120; border:1px solid #1e293b; border-radius:10px; padding:1rem; color:#38bdf8; font-family:monospace; font-size:0.9rem; overflow-x:auto;"><code>&lt;!-- Official YOUPI PG Universal Integration Script --&gt;
+        <pre style="background:#0b1120; border:1px solid #1e293b; border-radius:10px; padding:1rem; color:#38bdf8; font-family:monospace; font-size:0.9rem; overflow-x:auto;"><code>&lt;!-- Official PayNova Universal Integration Script --&gt;
 &lt;script
-    src="https://&lt;youpi-checkout-host&gt;/youpi.js"
-    data-youpi-key="YOUR_PUBLIC_KEY"&gt;
+    src="https://&lt;paynova-checkout-host&gt;/paynova.js"
+    data-paynova-key="YOUR_PUBLIC_KEY"&gt;
 &lt;/script&gt;</code></pre>
       </div>
 
@@ -1462,10 +1462,10 @@
           <h3 style="font-family:'Outfit',sans-serif; font-size:1.35rem; font-weight:700; color:#ffffff;">Map Your Payment Button (Zero JavaScript)</h3>
         </div>
         <p style="color:#cbd5e1; font-size:0.92rem; margin-bottom:1rem; line-height:1.5;">
-          Add <code>data-youpi-pay</code>, <code>data-order-id</code>, and <code>data-amount</code> to any button. The script automatically opens the centered modal checkout on click!
+          Add <code>data-paynova-pay</code>, <code>data-order-id</code>, and <code>data-amount</code> to any button. The script automatically opens the centered modal checkout on click!
         </p>
         <pre style="background:#0b1120; border:1px solid #1e293b; border-radius:10px; padding:1rem; color:#4ade80; font-family:monospace; font-size:0.9rem; overflow-x:auto;"><code>&lt;button
-    data-youpi-pay
+    data-paynova-pay
     data-order-id="ORDER-1001"
     data-amount="499"&gt;
     Buy Now
@@ -1485,17 +1485,17 @@
           The script emits standardized DOM CustomEvents on <code>window</code> to drive your user experience.
         </p>
         <pre style="background:#0b1120; border:1px solid #1e293b; border-radius:10px; padding:1rem; color:#facc15; font-family:monospace; font-size:0.88rem; overflow-x:auto;"><code>&lt;script&gt;
-  window.addEventListener('youpi:payment:success', (e) =&gt; {
+  window.addEventListener('paynova:payment:success', (e) =&gt; {
     const { order_id, amount_received, utr, payment_mode } = e.detail;
     console.log(`Payment confirmed for Order #${order_id}. UTR: ${utr}`);
     window.location.href = `/order-success?order_id=${order_id}&amount=${amount_received}&utr=${utr}`;
   });
 
-  window.addEventListener('youpi:payment:failed', (e) =&gt; {
+  window.addEventListener('paynova:payment:failed', (e) =&gt; {
     window.location.href = `/order-failed?order_id=${e.detail.order_id}&reason=${e.detail.reason}`;
   });
 
-  window.addEventListener('youpi:payment:suspicious', (e) =&gt; {
+  window.addEventListener('paynova:payment:suspicious', (e) =&gt; {
     window.location.href = `/order-suspicious?order_id=${e.detail.order_id}`;
   });
 &lt;/script&gt;</code></pre>
@@ -1505,12 +1505,12 @@
       <div style="background:#1e293b; border:1px solid #334155; border-radius:16px; padding:1.75rem; margin-bottom:1.75rem;">
         <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
           <span style="background:#2563eb; color:#ffffff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800;">4</span>
-          <h3 style="font-family:'Outfit',sans-serif; font-size:1.35rem; font-weight:700; color:#ffffff;">Or Use Programmatic Invocation: <code>Youpi.pay({...})</code></h3>
+          <h3 style="font-family:'Outfit',sans-serif; font-size:1.35rem; font-weight:700; color:#ffffff;">Or Use Programmatic Invocation: <code>PayNova.pay({...})</code></h3>
         </div>
         <p style="color:#cbd5e1; font-size:0.92rem; margin-bottom:1rem; line-height:1.5;">
           For dynamic shopping carts (React, Vue, Next.js, Nuxt), call the programmatic API directly:
         </p>
-        <pre style="background:#0b1120; border:1px solid #1e293b; border-radius:10px; padding:1rem; color:#a78bfa; font-family:monospace; font-size:0.88rem; overflow-x:auto;"><code>Youpi.pay({
+        <pre style="background:#0b1120; border:1px solid #1e293b; border-radius:10px; padding:1rem; color:#a78bfa; font-family:monospace; font-size:0.88rem; overflow-x:auto;"><code>PayNova.pay({
   order_id: "ORDER-1001",
   amount: 499,
   currency: "INR",
@@ -1542,7 +1542,7 @@
         <pre style="background:#0b1120; border:1px solid #1e293b; border-radius:10px; padding:1rem; color:#f472b6; font-family:monospace; font-size:0.88rem; overflow-x:auto;"><code>// Node.js / Express Webhook Receiver Reference
 import crypto from 'node:crypto';
 
-app.post('/api/youpi-webhook', express.raw({ type: 'application/json' }), (req, res) => {
+app.post('/api/paynova-webhook', express.raw({ type: 'application/json' }), (req, res) => {
   const signature = req.headers['x-gateway-signature']; // 'sha256=...'
   const webhookSecret = process.env.YOUPI_WEBHOOK_SECRET;
 
@@ -1571,7 +1571,7 @@ app.post('/api/youpi-webhook', express.raw({ type: 'application/json' }), (req, 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem;">
           <div style="background:#0c1527; padding:1.25rem; border-radius:10px; border:1px solid #1e293b;">
             <strong style="color:#38bdf8; font-size:0.95rem;">Q: What do I put in my HTML?</strong>
-            <p style="color:#94a3b8; font-size:0.85rem; margin-top:0.4rem; line-height:1.5;">A: Exactly one script tag: <code>&lt;script src="..." data-youpi-key="KEY"&gt;&lt;/script&gt;</code> and your button with <code>data-youpi-pay</code>.</p>
+            <p style="color:#94a3b8; font-size:0.85rem; margin-top:0.4rem; line-height:1.5;">A: Exactly one script tag: <code>&lt;script src="..." data-paynova-key="KEY"&gt;&lt;/script&gt;</code> and your button with <code>data-paynova-pay</code>.</p>
           </div>
           <div style="background:#0c1527; padding:1.25rem; border-radius:10px; border:1px solid #1e293b;">
             <strong style="color:#38bdf8; font-size:0.95rem;">Q: What information do I send to PAYNOVA?</strong>
@@ -1579,7 +1579,7 @@ app.post('/api/youpi-webhook', express.raw({ type: 'application/json' }), (req, 
           </div>
           <div style="background:#0c1527; padding:1.25rem; border-radius:10px; border:1px solid #1e293b;">
             <strong style="color:#38bdf8; font-size:0.95rem;">Q: How does the payment modal open?</strong>
-            <p style="color:#94a3b8; font-size:0.85rem; margin-top:0.4rem; line-height:1.5;">A: Automatically! Clicking a <code>data-youpi-pay</code> button dims and blurs the background and renders the centered 2-column modal (or mobile drawer).</p>
+            <p style="color:#94a3b8; font-size:0.85rem; margin-top:0.4rem; line-height:1.5;">A: Automatically! Clicking a <code>data-paynova-pay</code> button dims and blurs the background and renders the centered 2-column modal (or mobile drawer).</p>
           </div>
           <div style="background:#0c1527; padding:1.25rem; border-radius:10px; border:1px solid #1e293b;">
             <strong style="color:#38bdf8; font-size:0.95rem;">Q: Which event actually proves the order is paid?</strong>
@@ -1804,8 +1804,8 @@ app.post('/api/youpi-webhook', express.raw({ type: 'application/json' }), (req, 
           return;
         }
 
-        // 2. Launch checkout modal using official Youpi.pay() SDK
-        window.Youpi.pay({
+        // 2. Launch checkout modal using official PayNova.pay() SDK
+        window.PayNova.pay({
           checkoutUrl: data.checkoutUrl,
           order_id: data.orderId,
           amount: currentAmount,
@@ -1860,29 +1860,29 @@ app.post('/api/youpi-webhook', express.raw({ type: 'application/json' }), (req, 
     }
 
     // --- OFFICIAL BROWSER PAYMENT EVENT LISTENERS ---
-    window.addEventListener('youpi:payment:success', function(e) {
-      console.log('[PAYNOVA Event] youpi:payment:success', e.detail);
+    window.addEventListener('paynova:payment:success', function(e) {
+      console.log('[PAYNOVA Event] paynova:payment:success', e.detail);
       // Browser events never authorize fulfillment. The signed webhook does.
       setTimeout(() => window.location.reload(), 1200);
     });
 
-    window.addEventListener('youpi:payment:failed', function(e) {
-      console.warn('[PAYNOVA Event] youpi:payment:failed', e.detail);
+    window.addEventListener('paynova:payment:failed', function(e) {
+      console.warn('[PAYNOVA Event] paynova:payment:failed', e.detail);
       showOutcomeModal('FAILED', e.detail?.order_id, e.detail?.amount_received || currentAmount, e.detail?.reason);
     });
 
-    window.addEventListener('youpi:payment:suspicious', function(e) {
-      console.warn('[PAYNOVA Event] youpi:payment:suspicious', e.detail);
+    window.addEventListener('paynova:payment:suspicious', function(e) {
+      console.warn('[PAYNOVA Event] paynova:payment:suspicious', e.detail);
       showOutcomeModal('SUSPICIOUS', e.detail?.order_id, currentAmount);
     });
 
-    window.addEventListener('youpi:payment:expired', function(e) {
-      console.warn('[PAYNOVA Event] youpi:payment:expired', e.detail);
+    window.addEventListener('paynova:payment:expired', function(e) {
+      console.warn('[PAYNOVA Event] paynova:payment:expired', e.detail);
       showOutcomeModal('EXPIRED', e.detail?.order_id, currentAmount);
     });
 
-    window.addEventListener('youpi:payment:cancelled', function(e) {
-      console.log('[PAYNOVA Event] youpi:payment:cancelled', e.detail);
+    window.addEventListener('paynova:payment:cancelled', function(e) {
+      console.log('[PAYNOVA Event] paynova:payment:cancelled', e.detail);
       showOutcomeModal('CANCELLED', e.detail?.order_id, currentAmount);
     });
 
@@ -1934,7 +1934,7 @@ app.post('/api/youpi-webhook', express.raw({ type: 'application/json' }), (req, 
       const elPayment = document.getElementById('receiptPaymentId');
       const elAmount = document.getElementById('receiptAmountPaid');
 
-      if (elOrder) elOrder.textContent = orderId || 'YOUPI-ORD-LIVE';
+      if (elOrder) elOrder.textContent = orderId || 'PAYNOVA-ORD-LIVE';
       if (elPayment) elPayment.textContent = paymentId || 'pay_verified';
       if (elAmount) elAmount.textContent = '₹' + Number(amount).toFixed(2);
       if (modal) modal.classList.add('active');

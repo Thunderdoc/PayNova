@@ -6,7 +6,7 @@ import { extractIntelligentAmount, BankSmsParser, PaymentVerificationPipeline } 
 import { startServer as startPaymentApi } from '../index.js';
 import { PaymentStatus, PaymentMethod } from '@youpi/common';
 
-describe('YOUPI PG: Parser Rule Correction & Exact Fraud/Ban System (All 29 Acceptance Tests)', () => {
+describe('PayNova: Parser Rule Correction & Exact Fraud/Ban System (All 29 Acceptance Tests)', () => {
   let apiInstance;
   let baseUrl;
   let testDb;

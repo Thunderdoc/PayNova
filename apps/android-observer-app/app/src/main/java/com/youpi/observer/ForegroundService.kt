@@ -41,7 +41,7 @@ class ForegroundService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Hackastra Pay Payment Observer Service",
+                "PayNova Payment Observer Service",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Monitors incoming UPI payment notifications in real time."
@@ -61,7 +61,7 @@ class ForegroundService : Service() {
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Hackastra Pay Observer Active")
+            .setContentTitle("PayNova Observer Active")
             .setContentText("Listening for incoming bank & UPI credit notifications...")
             .setSmallIcon(android.R.drawable.ic_lock_idle_charging)
             .setContentIntent(pendingIntent)

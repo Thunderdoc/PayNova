@@ -1,7 +1,7 @@
 {
   "name": "sms-observer",
   "version": "1.0.0",
-  "description": "Google Messages / SMS Payment Observer Service for YOUPI PG",
+  "description": "Google Messages / SMS Payment Observer Service for PayNova",
   "type": "module",
   "main": "./src/index.js",
   "scripts": {

@@ -1,7 +1,7 @@
 # Installation & Host Environment Setup Guide
 
 ## 1. Operating Environment
-YOUPI PG is distributed as source code and is engineered to run directly as native host processes on standard Linux (Ubuntu, Debian, RHEL, CentOS) and Windows 10/11 environments.
+PayNova is distributed as source code and is engineered to run directly as native host processes on standard Linux (Ubuntu, Debian, RHEL, CentOS) and Windows 10/11 environments.
 
 **Zero Docker Requirement:** Docker, Docker Compose, and external container engines are completely optional and not required. Standard `npm install` works out-of-the-box across all workspace packages.
 
@@ -14,7 +14,7 @@ YOUPI PG is distributed as source code and is engineered to run directly as nati
 
 ## 2. Zero-Config Quickstart (All Platforms)
 
-Thanks to **Zero-Config Database Auto-Provisioning**, YOUPI PG automatically creates `data/youpi_pg.sqlite` and executes idempotent schema migrations and default seeds on first launch:
+Thanks to **Zero-Config Database Auto-Provisioning**, PayNova automatically creates `data/youpi_pg.sqlite` and executes idempotent schema migrations and default seeds on first launch:
 
 ```bash
 # 1. Clone repository

@@ -1,7 +1,7 @@
 {
   "name": "merchant-admin",
   "version": "1.0.0",
-  "description": "Merchant Administration Portal and Operational Control for YOUPI PG",
+  "description": "Merchant Administration Portal and Operational Control for PayNova",
   "type": "module",
   "main": "./src/index.js",
   "scripts": {
