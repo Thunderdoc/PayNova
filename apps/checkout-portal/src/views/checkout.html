@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{MERCHANT_NAME}} · {{APP_NAME}} Checkout</title>
   <style>
     :root {
@@ -1296,6 +1296,7 @@
       transition: background 0.15s;
     }
 
+    .ypg-btn-auth-action:focus-visible { outline:3px solid #0866F5; outline-offset:2px; }
     .ypg-btn-auth-action:hover {
       background: #1e293b;
     }
@@ -4252,7 +4253,7 @@
               </div>
 
               <div class="ypg-input-group">
-                <input type="text" class="ypg-input-control ypg-otp-control" id="authOtpInput" placeholder="••••••"
+                <input type="text" class="ypg-input-control ypg-otp-control" id="authOtpInput" placeholder="••••••" aria-label="6-digit OTP code"
                   maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code"
                   autocorrect="off" autocapitalize="off" spellcheck="false" />
               </div>

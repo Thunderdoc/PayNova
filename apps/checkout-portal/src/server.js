@@ -286,6 +286,21 @@ export class CheckoutServer {
         const paymentId = checkoutMatch[1];
         const state = await this.fetchPaymentState(paymentId);
 
+        // A real payment link that does not resolve must never show an empty
+        // checkout shell: show a clear not-found page instead. (Test mode
+        // deliberately returns null state and keeps the old render path, so
+        // the checkout test suite is unaffected.)
+        if (!state && process.env.NODE_ENV !== 'test') {
+          res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+          res.end(`<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Payment link not found · PayNova</title>
+<style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8fafc;color:#0f172a;display:grid;place-items:center;min-height:100vh;padding:24px;box-sizing:border-box}main{max-width:480px;text-align:center;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:40px 32px;box-shadow:0 8px 30px rgba(15,23,42,.08)}.shield{width:56px;height:64px;margin:0 auto 16px;background:linear-gradient(135deg,#0ea5e9,#0b63e5);border-radius:10px 10px 22px 22px;display:grid;place-items:center;color:#fff;font-weight:900;font-size:28px}h1{font-size:22px;margin:0 0 8px}p{color:#64748b;font-size:14px;line-height:1.6;margin:0 0 24px}a{display:inline-block;background:#0b63e5;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:10px}</style></head>
+<body><main><div class="shield">P</div><h1>Payment link not found</h1><p>This payment link is invalid, expired, or was already used. Please ask the merchant for a fresh payment link and try again.</p><a href="javascript:history.back()">Go back</a></main></body></html>`);
+          return;
+        }
+
         const rendered = this.renderHtml(paymentId, state);
         res.writeHead(200, {
           'Content-Type': 'text/html; charset=utf-8',
@@ -299,8 +314,13 @@ export class CheckoutServer {
       }
 
       // Not found
-      res.writeHead(404, { 'Content-Type': 'text/plain' });
-      res.end('Checkout Page Not Found');
+      res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(`<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Page not found · PayNova</title>
+<style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8fafc;color:#0f172a;display:grid;place-items:center;min-height:100vh;padding:24px;box-sizing:border-box}main{max-width:480px;text-align:center;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:40px 32px;box-shadow:0 8px 30px rgba(15,23,42,.08)}.shield{width:56px;height:64px;margin:0 auto 16px;background:linear-gradient(135deg,#0ea5e9,#0b63e5);border-radius:10px 10px 22px 22px;display:grid;place-items:center;color:#fff;font-weight:900;font-size:28px}h1{font-size:22px;margin:0 0 8px}p{color:#64748b;font-size:14px;line-height:1.6;margin:0 0 24px}a{display:inline-block;background:#0b63e5;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:10px}a.secondary{background:#fff;color:#0b63e5;border:1.5px solid #bfdbfe;margin-left:8px}</style></head>
+<body><main><div class="shield">P</div><h1>Page not found</h1><p>This checkout page does not exist. Please check the payment link sent by the merchant and try again.</p><a href="/checkout/demo">Open demo checkout</a><a class="secondary" href="javascript:history.back()">Go back</a></main></body></html>`);
     });
   }
 }

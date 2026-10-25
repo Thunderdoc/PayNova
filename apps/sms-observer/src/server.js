@@ -121,8 +121,8 @@ export class SmsObserverServer {
         return;
       }
 
-      res.writeHead(404, { 'Content-Type': 'text/plain' });
-      res.end('SMS Observer Route Not Found');
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Route not found: ' + pathname, service: 'sms-observer' }));
     });
   }
 }
