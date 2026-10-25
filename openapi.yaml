@@ -1,9 +1,9 @@
 openapi: 3.0.3
 info:
-  title: YOUPI PG V2 — Public Developer Integration API
+  title: PayNova — Public Developer Integration API
   version: 2.0.0
   description: |
-    Official public integration API and webhook contract for YOUPI PG V2 Sovereign Payment Gateway.
+    Official public integration API and webhook contract for PayNova Sovereign Payment Gateway.
     Allows merchants to create payment sessions, query verification status, and receive authoritative HMAC-SHA256 signed webhooks.
 
 servers:

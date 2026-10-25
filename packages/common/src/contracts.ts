@@ -74,7 +74,7 @@ export interface WebhookEventPayload {
 // --- Observer Payload Contracts ---
 export interface AndroidObservationPayload {
   deviceId: string;
-  source: ObserverSource.ANDROID;
+  source: ObserverSource.ANDROID_OBSERVER;
   amountPaise: number;
   observedAt: string;
   observationId?: string;

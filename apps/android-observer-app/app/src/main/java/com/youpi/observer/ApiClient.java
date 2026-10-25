@@ -33,7 +33,7 @@ public class ApiClient {
     }
 
     public String getBaseUrl() {
-        return prefs.getString("base_url", "http://10.0.2.2:6100");
+        return prefs.getString("base_url", "");
     }
 
     public String getDeviceId() {

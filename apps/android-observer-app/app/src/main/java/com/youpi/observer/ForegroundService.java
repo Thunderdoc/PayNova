@@ -62,7 +62,7 @@ public class ForegroundService extends Service {
             }
         };
         heartbeatHandler.postDelayed(heartbeatRunnable, 5000);
-        Log.i(TAG, "YOUPI Foreground Service started successfully.");
+        Log.i(TAG, "Hackastra Pay Foreground Service started successfully.");
     }
 
     @Override
@@ -74,7 +74,7 @@ public class ForegroundService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                 CHANNEL_ID,
-                "YOUPI SMS & UPI Gateway Daemon",
+                "Hackastra Pay SMS & UPI Observer",
                 NotificationManager.IMPORTANCE_LOW
             );
             channel.setDescription("Maintains continuous background listening for bank credit SMS and UPI payments.");
@@ -105,7 +105,7 @@ public class ForegroundService extends Service {
             builder = new Notification.Builder(this);
         }
 
-        builder.setContentTitle("YOUPI Gateway Active")
+        builder.setContentTitle("Hackastra Pay Observer Active")
                .setContentText("24/7 background listener active for Bank SMS & UPI payments")
                .setSmallIcon(android.R.drawable.stat_notify_chat)
                .setContentIntent(pendingIntent)
@@ -125,7 +125,7 @@ public class ForegroundService extends Service {
                 wakeLock.release();
             } catch (Exception ignored) {}
         }
-        Log.i(TAG, "YOUPI Foreground Service stopped.");
+        Log.i(TAG, "Hackastra Pay Foreground Service stopped.");
     }
 
     @Override

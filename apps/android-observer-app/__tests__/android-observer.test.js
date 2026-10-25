@@ -34,8 +34,7 @@ describe('Android Payment Observer Integration Tests', () => {
   });
 
   test('successfully pairs Android device with valid enrollment token', async () => {
-    const enrollmentSecret = process.env.ANDROID_ENROLLMENT_SECRET || 'android_pairing_enrollment_secret_key_32_chars';
-    const pairResult = await driver.pair(enrollmentSecret);
+    const pairResult = await driver.pairFromQr();
 
     assert.ok(pairResult.paired);
     assert.ok(pairResult.deviceId);

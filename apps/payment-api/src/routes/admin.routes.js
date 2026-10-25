@@ -240,6 +240,92 @@ export function registerAdminRoutes(server, ctx) {
     });
   });
 
+  // GET /api/v1/admin/payments/export.csv (Financial Ledger CSV Export for GST/Accounting)
+  server.get('/api/v1/admin/payments/export.csv', async (req, res) => {
+    const merchantId = req.query.merchantId || '00000000-0000-0000-0000-000000000001';
+    const payments = ctx.sessionRepo.findByMerchantId(merchantId, 1000);
+
+    const headers = ['Payment ID', 'Order ID', 'Amount (INR)', 'Method', 'Status', 'Bank UTR / Ref', 'Verification Tier', 'Created At', 'Completed At'];
+    const rows = payments.map(p => {
+      let utr = p.metadata?.utr || '-';
+      if (utr === '-' && p.attributedObservationId && ctx.obsRepo) {
+        const obs = ctx.obsRepo.findById(p.attributedObservationId);
+        if (obs?.bankReferenceNumber) utr = obs.bankReferenceNumber;
+      }
+      const amountRupees = (Number(p.amountPaise) / 100).toFixed(2);
+      const createdAt = p.createdAt ? new Date(p.createdAt).toISOString() : '-';
+      const completedAt = p.completedAt ? new Date(p.completedAt).toISOString() : '-';
+      const escapeCsv = (str) => `"${String(str || '').replace(/"/g, '""')}"`;
+
+      return [
+        escapeCsv(p.id),
+        escapeCsv(p.orderId),
+        escapeCsv(amountRupees),
+        escapeCsv(p.method || 'UPI'),
+        escapeCsv(p.status),
+        escapeCsv(utr),
+        escapeCsv(p.verificationTag || 'UNVERIFIED'),
+        escapeCsv(createdAt),
+        escapeCsv(completedAt)
+      ].join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+    const filename = `PayNova-Transactions-${new Date().toISOString().slice(0, 10)}.csv`;
+
+    res.writeHead(200, {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Cache-Control': 'no-cache'
+    });
+    res.end(csvContent);
+  });
+
+  // POST /api/v1/admin/payments/:id/manual-verify (Dispute / Chargeback / Missing SMS resolution)
+  server.post('/api/v1/admin/payments/:id/manual-verify', async (req, res, params) => {
+    const body = await HttpServer.parseBody(req);
+    const { utr, note } = body;
+    const session = ctx.sessionRepo.findById(params.id);
+
+    if (!session) {
+      HttpServer.json(res, 404, { error: 'Payment session not found' });
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const updated = ctx.sessionRepo.update(session.id, {
+      status: 'SUCCESS',
+      completedAt: now,
+      metadata: {
+        ...(session.metadata || {}),
+        utr: utr || session.metadata?.utr || 'MANUAL-BANK-CONFIRM',
+        manuallyVerified: true,
+        disputeResolvedNote: note || 'Manually reconciled by merchant supervisor',
+        resolvedAt: now
+      }
+    });
+
+    if (session.receivingAccountId) {
+      ctx.queueEngine.promoteNext(session.receivingAccountId);
+    }
+
+    server.broadcastSse(session.id, 'status_change', {
+      status: 'SUCCESS',
+      verificationTag: 'Manual Admin Confirmation'
+    });
+    server.broadcastSse('admin_counter_events', 'status_change', {
+      status: 'SUCCESS',
+      sessionId: session.id,
+      orderId: session.orderId
+    });
+
+    HttpServer.json(res, 200, {
+      success: true,
+      message: `Transaction #${session.orderId} successfully marked verified.`,
+      session: updated
+    });
+  });
+
   // GET /api/v1/admin/tickets
   server.get('/api/v1/admin/tickets', async (req, res) => {
     const merchantId = req.query.merchantId || '00000000-0000-0000-0000-000000000001';
@@ -651,7 +737,7 @@ export function registerAdminRoutes(server, ctx) {
       privacyPolicyUrl,
       sellingMode,
       branding: {
-        appName: branding.appName || 'YOUPI PG',
+        appName: branding.appName || 'PayNova',
         primaryColor: branding.primaryColor || '#2563eb',
         headerTheme: branding.headerTheme || 'gradient',
         logoUrl: branding.logoUrl || null,
@@ -662,7 +748,7 @@ export function registerAdminRoutes(server, ctx) {
         hideSubbanner: Boolean(branding.hideSubbanner),
         hidePoweredBy: Boolean(branding.hidePoweredBy),
         hideTimeSavingBanner: Boolean(branding.hideTimeSavingBanner),
-        footerGuarantee: branding.footerGuarantee || 'Secured by YOUPI PG 256-Bit Encryption',
+        footerGuarantee: branding.footerGuarantee || 'Secure payment processing with server-side verification',
         counterInstructions: branding.counterInstructions || 'Please visit the store billing counter and present this screen to the cashier.',
         cardCounterInstructions: branding.cardCounterInstructions || 'Please swipe, insert, or tap your credit or debit card on the store POS terminal at the billing desk.',
         termsUrl: branding.termsUrl || null,
@@ -711,7 +797,7 @@ export function registerAdminRoutes(server, ctx) {
     const inputBranding = body.branding || {};
     const mergedBranding = { ...currentBranding };
 
-    if (inputBranding.appName !== undefined) mergedBranding.appName = inputBranding.appName.trim() || currentBranding.appName || 'YOUPI PG';
+    if (inputBranding.appName !== undefined) mergedBranding.appName = inputBranding.appName.trim() || currentBranding.appName || 'PayNova';
     if (inputBranding.logoUrl !== undefined) mergedBranding.logoUrl = inputBranding.logoUrl ? inputBranding.logoUrl.trim() : null;
     if (inputBranding.primaryColor !== undefined) mergedBranding.primaryColor = inputBranding.primaryColor.trim() || currentBranding.primaryColor || '#2563eb';
     if (inputBranding.sidebarNotice !== undefined) mergedBranding.sidebarNotice = inputBranding.sidebarNotice ? inputBranding.sidebarNotice.trim() : null;
@@ -922,7 +1008,7 @@ export function registerAdminRoutes(server, ctx) {
       const currentBranding = merchant.branding || {};
       const mergedBranding = { ...currentBranding };
 
-      if (inputBranding.appName !== undefined) mergedBranding.appName = inputBranding.appName.trim() || currentBranding.appName || 'YOUPI PG';
+    if (inputBranding.appName !== undefined) mergedBranding.appName = inputBranding.appName.trim() || currentBranding.appName || 'PayNova';
       if (inputBranding.logoUrl !== undefined) mergedBranding.logoUrl = inputBranding.logoUrl ? inputBranding.logoUrl.trim() : null;
       if (inputBranding.primaryColor !== undefined) mergedBranding.primaryColor = inputBranding.primaryColor.trim() || currentBranding.primaryColor || '#2563eb';
       if (inputBranding.headerTheme !== undefined) mergedBranding.headerTheme = inputBranding.headerTheme || 'gradient';
@@ -974,6 +1060,16 @@ export function registerAdminRoutes(server, ctx) {
       if (body.privacyPolicyUrl !== undefined || inputBranding.privacyPolicyUrl !== undefined) {
         const raw = body.privacyPolicyUrl !== undefined ? body.privacyPolicyUrl : inputBranding.privacyPolicyUrl;
         mergedBranding.privacyPolicyUrl = raw ? String(raw).trim() : null;
+      }
+      if (body.websiteUrl !== undefined || inputBranding.websiteUrl !== undefined) {
+        const raw = body.websiteUrl !== undefined ? body.websiteUrl : inputBranding.websiteUrl;
+        mergedBranding.websiteUrl = raw ? String(raw).trim() : null;
+      }
+      if (inputBranding.waReceiptConfig !== undefined || body.waReceiptConfig !== undefined) {
+        mergedBranding.waReceiptConfig = {
+          ...(mergedBranding.waReceiptConfig || {}),
+          ...((inputBranding.waReceiptConfig || body.waReceiptConfig) || {})
+        };
       }
 
       if (body.envMode !== undefined || inputBranding.envMode !== undefined) {
@@ -1333,6 +1429,35 @@ export function registerAdminRoutes(server, ctx) {
     }
   });
 
+  // POST /api/v1/admin/ledger/clear-test-data - Clear all test transactions & reset ledger to zero
+  server.post('/api/v1/admin/ledger/clear-test-data', async (req, res) => {
+    try {
+      ctx.db.execute('PRAGMA foreign_keys = OFF');
+      ctx.db.execute('DELETE FROM security_events');
+      ctx.db.execute('DELETE FROM payment_observations');
+      ctx.db.execute('DELETE FROM webhook_deliveries');
+      ctx.db.execute('DELETE FROM ticket_messages');
+      ctx.db.execute('DELETE FROM support_tickets');
+      ctx.db.execute('DELETE FROM payment_sessions');
+      ctx.db.execute(`
+        UPDATE payment_receiving_accounts
+        SET is_slot_busy = 0, current_active_session_id = NULL
+      `);
+      ctx.db.execute('PRAGMA foreign_keys = ON');
+
+      if (global._waReceiptSentSet) {
+        global._waReceiptSentSet.clear();
+      }
+
+      HttpServer.json(res, 200, {
+        success: true,
+        message: 'All test and simulated transactions have been cleared. Ledger and KPIs reset to zero.'
+      });
+    } catch (err) {
+      HttpServer.json(res, 500, { error: `Failed to clear test transactions: ${err.message}` });
+    }
+  });
+
   // GET /api/v1/admin/counter-pending - 5-Second Realtime Poller for In-Store Cash/Card Counter Desk
   server.get('/api/v1/admin/counter-pending', async (req, res) => {
     const merchantId = req.query.merchantId;
@@ -1461,8 +1586,8 @@ export function registerAdminRoutes(server, ctx) {
       });
       return;
     }
-    const redirectUri = 'https://pay-gmail.gauravtesting.online/oauth/callback';
-    const scopes = encodeURIComponent('https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/userinfo.email');
+    const redirectUri = process.env.GMAIL_REDIRECT_URI || 'http://localhost:6003/oauth/callback';
+    const scopes = encodeURIComponent('https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email');
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&include_granted_scopes=true`;
 
     HttpServer.json(res, 200, {

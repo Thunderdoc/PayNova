@@ -23,7 +23,9 @@ const __dirname = path.dirname(__filename);
  * }} ctx
  */
 export function registerPollerRoutes(server, ctx) {
-  const enrollmentSecret = process.env.ANDROID_ENROLLMENT_SECRET || 'android_pairing_enrollment_secret_key_32_chars';
+  // Pairing credentials are short-lived and single-use. Never place a reusable
+  // system secret in a QR code or accept a hardcoded backdoor token.
+  const pendingPairings = new Map();
 
   // GET /api/v1/pollers/active-window (Enables deep intelligent DOM scanning for active amounts and dual-layer verification)
   server.get('/api/v1/pollers/active-window', async (req, res) => {
@@ -150,19 +152,17 @@ export function registerPollerRoutes(server, ctx) {
     const deviceName = body.deviceName || 'Android SMS Gateway';
     const deviceModel = body.deviceModel || 'Android Device';
 
-    // Verify enrollment token against system secret or merchant token
-    if (!token || (token !== enrollmentSecret && token !== `pair_${merchantId.slice(0, 8)}` && token !== 'youpi_sms_pair_token_secure')) {
+    const pending = token ? pendingPairings.get(String(token)) : null;
+    if (!pending || pending.used || pending.merchantId !== merchantId || Date.now() > pending.expiresAt) {
       HttpServer.json(res, 401, { error: 'Invalid or expired device pairing enrollment token.' });
       return;
     }
 
-    if (body.expiresAt && Date.now() > Number(body.expiresAt)) {
-      HttpServer.json(res, 400, { error: 'PAIRING QR EXPIRED' });
-      return;
-    }
+    pending.used = true;
+    pendingPairings.delete(String(token));
 
     if (body.version && body.version !== 'v1') {
-      HttpServer.json(res, 400, { error: 'INVALID YOUPI PAIRING QR' });
+      HttpServer.json(res, 400, { error: 'INVALID PAYNOVA PAIRING QR' });
       return;
     }
 
@@ -390,16 +390,23 @@ export function registerPollerRoutes(server, ctx) {
 
   // --- MERCHANT ADMIN: SMS GATEWAY PAIRING QR CODE & STATUS ---
   server.get('/api/v1/admin/sms-gateway/pair-qr', async (req, res) => {
+    const now = Date.now();
+    for (const [pendingToken, pending] of pendingPairings) {
+      if (pending.used || pending.expiresAt <= now) pendingPairings.delete(pendingToken);
+    }
     let merchant = req.query.merchantId ? (ctx.merchantRepo ? ctx.merchantRepo.findById(req.query.merchantId) : null) : null;
     if (!merchant && ctx.merchantRepo) merchant = ctx.merchantRepo.getDefault ? ctx.merchantRepo.getDefault() : (ctx.merchantRepo.findById('00000000-0000-0000-0000-000000000001') || ctx.merchantRepo.findAll()[0]);
     const merchantId = merchant ? merchant.id : (req.query.merchantId || '00000000-0000-0000-0000-000000000001');
 
     // Canonical runtime URL derivation (Part C2)
     const runtime = resolveRuntimeUrls(merchant?.branding || {});
-    const baseUrl = runtime.apiUrl;
-    const token = enrollmentSecret;
+    // A phone must never receive localhost in a pairing QR. In local development,
+    // allow an explicit LAN/public URL while keeping browser APIs on localhost.
+    const baseUrl = String(process.env.ANDROID_PAIRING_BASE_URL || runtime.apiUrl).trim().replace(/\/+$/, '');
+    const token = crypto.randomBytes(32).toString('base64url');
     const sessionId = crypto.randomUUID();
     const expiresAt = Date.now() + (10 * 60 * 1000); // 10 minutes
+    pendingPairings.set(token, { merchantId, expiresAt, used: false });
 
     const pairingPayloadObj = {
       version: 'v1',
@@ -518,13 +525,10 @@ export function registerPollerRoutes(server, ctx) {
     }
 
     if (!foundPath) {
-      // Create a fallback stub APK binary file if build hasn't outputted yet
-      const fallbackDir = path.resolve(__dirname, '../../public');
-      if (!fs.existsSync(fallbackDir)) fs.mkdirSync(fallbackDir, { recursive: true });
-      foundPath = path.join(fallbackDir, 'youpi-sms-gateway.apk');
-      if (!fs.existsSync(foundPath)) {
-        fs.writeFileSync(foundPath, Buffer.from('PK\x03\x04YOUPI_SMS_GATEWAY_STANDALONE_APK_PACKAGE'));
-      }
+      HttpServer.json(res, 503, {
+        error: 'Android observer APK is not available. Build and sign the release APK before downloading it.'
+      });
+      return;
     }
 
     const stat = fs.statSync(foundPath);

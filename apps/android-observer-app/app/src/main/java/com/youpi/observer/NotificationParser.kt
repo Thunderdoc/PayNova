@@ -47,7 +47,7 @@ object NotificationParser {
 
     fun isRelevantPackage(pkg: String): Boolean {
         if (BANKING_PACKAGES.contains(pkg)) return true
-        val lower = pkg.toLowerCase()
+        val lower = pkg.lowercase()
         return lower.contains("upi") || lower.contains("bank") || lower.contains("pay")
     }
 

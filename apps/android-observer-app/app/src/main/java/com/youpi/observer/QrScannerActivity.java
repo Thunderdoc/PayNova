@@ -75,19 +75,20 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
         // 3. Header & Controls
         LinearLayout controls = new LinearLayout(this);
         controls.setOrientation(LinearLayout.VERTICAL);
-        controls.setPadding(32, 64, 32, 32);
+        controls.setPadding(28, 48, 28, 20);
 
         TextView tvTitle = new TextView(this);
-        tvTitle.setText("Pair SMS Gateway");
+        tvTitle.setText("Hackastra Pay  •  Pair device");
         tvTitle.setTextColor(Color.WHITE);
-        tvTitle.setTextSize(20f);
+        tvTitle.setTextSize(22f);
+        tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
         tvTitle.setGravity(Gravity.CENTER_HORIZONTAL);
         controls.addView(tvTitle);
 
         TextView tvDesc = new TextView(this);
-        tvDesc.setText("Point camera at the Pairing QR code in the Merchant Admin panel");
+        tvDesc.setText("Align the QR code inside the frame\nfrom your Merchant Admin panel");
         tvDesc.setTextColor(Color.parseColor("#94a3b8"));
-        tvDesc.setTextSize(13f);
+        tvDesc.setTextSize(15f);
         tvDesc.setGravity(Gravity.CENTER_HORIZONTAL);
         tvDesc.setPadding(0, 8, 0, 0);
         controls.addView(tvDesc);
@@ -100,9 +101,10 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
 
         // 4. Cancel / Close Button at bottom
         Button btnCancel = new Button(this);
-        btnCancel.setText("Cancel");
+        btnCancel.setText("CANCEL");
+        btnCancel.setTextSize(15f);
         btnCancel.setTextColor(Color.WHITE);
-        btnCancel.setBackgroundColor(Color.parseColor("#1e293b"));
+        btnCancel.setBackgroundColor(Color.parseColor("#17325F"));
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -275,7 +277,8 @@ public class QrScannerActivity extends Activity implements SurfaceHolder.Callbac
             super.onDraw(canvas);
             int width = getWidth();
             int height = getHeight();
-            float boxSize = Math.min(width, height) * 0.70f;
+            // Large target area on modern phones; keep enough room for readable instructions.
+            float boxSize = Math.min(width, height) * 0.84f;
             float left = (width - boxSize) / 2f;
             float top = (height - boxSize) / 2f;
             frameRect.set(left, top, left + boxSize, top + boxSize);

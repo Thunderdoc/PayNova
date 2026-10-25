@@ -1,6 +1,7 @@
 import { HttpServer } from '../server.js';
 import { toRupeesString, buildUpiUri, PaymentStatus, PaymentMethod, UPI_PROVIDERS } from '@youpi/common';
 import { validateSessionDeviceAccess } from '@youpi/core';
+import { pdfReceiptService } from '../services/pdf-receipt.service.js';
 
 /**
  * Validates device access to an active payment session.
@@ -367,10 +368,40 @@ export function registerCheckoutRoutes(server, ctx) {
     if ([PaymentStatus.SUCCESS, PaymentStatus.FAILED, PaymentStatus.EXPIRED, PaymentStatus.CANCELLED].includes(session.status)) {
       const merchant = ctx.merchantRepo.findById(session.merchantId);
       const branding = {
-        appName: 'YOUPI PG',
+        appName: 'PayNova',
         primaryColor: '#2563eb',
         ...(merchant?.branding || {})
       };
+
+      let customer = null;
+      if (session.customerId && ctx.customerRepo) {
+        const c = ctx.customerRepo.findById(session.customerId);
+        if (c) {
+          customer = {
+            id: c.id,
+            name: c.name,
+            email: c.email,
+            mobileNumber: c.mobileNumber,
+            fullName: c.name,
+            phoneNumber: c.mobileNumber
+          };
+        }
+      }
+
+      let utr = session.metadata?.utr || null;
+      if (!utr && session.attributedObservationId && ctx.obsRepo) {
+        const obs = ctx.obsRepo.findById(session.attributedObservationId);
+        if (obs?.bankReferenceNumber) {
+          utr = obs.bankReferenceNumber;
+        }
+      }
+      if (!utr && session.status === PaymentStatus.SUCCESS) {
+        utr = session.bankReference || 'Direct UPI Settlement';
+      }
+
+      const receiptNumber = session.metadata?.receiptNumber || `RCP-${session.orderId.replace(/[^A-Z0-9]/gi, '').slice(-8).toUpperCase()}`;
+      const receiptUrl = `/api/v1/receipts/${session.id}/download`;
+
       HttpServer.json(res, 200, {
         id: session.id,
         paymentId: session.id,
@@ -381,6 +412,18 @@ export function registerCheckoutRoutes(server, ctx) {
         status: session.status,
         timeRemainingSeconds: 0,
         isTerminal: true,
+        method: session.method,
+        verificationLevel: session.verificationLevel || 0,
+        verificationSources: session.verificationSources || [],
+        verificationTag: session.verificationTag || 'UNVERIFIED',
+        utr,
+        receiptNumber,
+        receiptUrl,
+        paidAt: session.completedAt ? session.completedAt.toISOString() : (session.updatedAt ? session.updatedAt.toISOString() : null),
+        completedAt: session.completedAt ? session.completedAt.toISOString() : null,
+        returnUrl: session.returnUrl,
+        customer,
+        metadata: session.metadata || {},
         branding
       });
       return;
@@ -441,7 +484,7 @@ export function registerCheckoutRoutes(server, ctx) {
     }
 
     const branding = {
-      appName: 'YOUPI PG',
+      appName: 'PayNova',
       primaryColor: '#2563eb',
       headerTheme: 'gradient',
       logoUrl: null,
@@ -460,6 +503,8 @@ export function registerCheckoutRoutes(server, ctx) {
     const sellingMode = merchantBranding.sellingMode || (isCounterSession ? 'OFFLINE' : 'ONLINE');
     branding.sellingMode = sellingMode;
 
+    // Preserve legacy CARD_COUNTER configuration for admin/backend compatibility;
+    // checkout rendering intentionally filters it from customer-facing methods.
     let rawEnabled = merchantBranding.enabledPaymentMethods || (sellingMode === 'ONLINE' ? ['UPI', 'COD'] : ['UPI', 'CASH_COUNTER', 'CARD_COUNTER']);
     let enabledMethods = ['UPI'];
     if (sellingMode === 'ONLINE') {
@@ -1739,5 +1784,100 @@ export function registerCheckoutRoutes(server, ctx) {
       return;
     }
     server.initSse(params.id, res);
+  });
+
+  // GET /api/v1/receipts/:id/download & /api/v1/checkout/:id/receipt/download
+  const handleReceiptDownload = async (req, res, params) => {
+    const session = ctx.sessionRepo.findById(params.id);
+    if (!session) {
+      HttpServer.json(res, 404, { error: 'Payment session not found' });
+      return;
+    }
+
+    if (session.status !== PaymentStatus.SUCCESS && session.status !== 'SUCCESS') {
+      HttpServer.json(res, 400, {
+        error: 'Receipt unavailable. Receipts are strictly generated only for successfully verified transactions.'
+      });
+      return;
+    }
+
+    const customer = session.customerId && ctx.customerRepo ? ctx.customerRepo.findById(session.customerId) : null;
+    const merchant = session.merchantId && ctx.merchantRepo ? ctx.merchantRepo.findById(session.merchantId) : null;
+    const branding = merchant?.branding || {};
+
+    const receiptNumber = session.metadata?.receiptNumber || `RCP-${Date.now().toString(36).toUpperCase()}-${session.orderId.replace(/[^A-Z0-9]/gi, '').slice(-6)}`;
+    const displayAmount = (Number(session.amountPaise) / 100);
+    const businessName = merchant?.businessName || branding.businessName || 'PayNova Technologies';
+    const supportEmail = (branding.supportEmails && branding.supportEmails[0]) || 'ankitraj2163@gmail.com';
+    const supportPhone = (branding.supportMobiles && branding.supportMobiles[0]) || '+91 7092620770';
+    const websiteUrl = branding.websiteUrl || 'https://paynova.in';
+
+    try {
+      const pdfBuffer = await pdfReceiptService.generateReceiptBuffer({
+        receiptNumber,
+        orderId: session.orderId,
+        amount: displayAmount,
+        currency: session.currency || 'INR',
+        customerName: customer?.name || session.metadata?.customerName || 'Valued Customer',
+        customerEmail: customer?.email || session.metadata?.customerEmail,
+        customerPhone: customer?.phone || session.metadata?.customerPhone,
+        paymentMethod: (!session.method || session.method === 'UPI') ? 'UPI' : (session.method.startsWith('UPI') ? session.method : `UPI (${session.method})`),
+        utr: session.utr || session.bankReference || 'Direct UPI Settlement',
+        paidAt: session.completedAt || session.updatedAt || new Date().toISOString(),
+        businessName,
+        supportEmail,
+        supportPhone,
+        websiteUrl
+      });
+
+      res.writeHead(200, {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename="Receipt-${receiptNumber}.pdf"`,
+        'Content-Length': pdfBuffer.length,
+        'Cache-Control': 'private, max-age=3600'
+      });
+      res.end(pdfBuffer);
+    } catch (err) {
+      console.warn('[checkout.routes] Error streaming PDF receipt:', err.message);
+      HttpServer.json(res, 500, { error: 'Failed to generate PDF receipt' });
+    }
+  };
+
+  server.get('/api/v1/receipts/:id/download', handleReceiptDownload);
+  server.get('/api/v1/checkout/:id/receipt/download', handleReceiptDownload);
+
+  // GET /api/v1/admin/standee/download (Printable Counter Standee PDF)
+  server.get('/api/v1/admin/standee/download', async (req, res) => {
+    try {
+      const merchantId = req.query?.merchantId || '00000000-0000-0000-0000-000000000001';
+      const merchant = ctx.merchantRepo.findById(merchantId);
+      const branding = merchant?.branding || {};
+      const requestedAccountId = String(req.query?.accountId || '').trim();
+      const account = requestedAccountId
+        ? ctx.accountRepo.findById(requestedAccountId)
+        : ctx.accountRepo.findActiveForMerchant(merchantId);
+      if (!account || account.merchantId !== merchantId || !account.upiId) {
+        return HttpServer.json(res, 409, { error: 'No valid receiving UPI account is configured for this standee' });
+      }
+
+      const standeeBuffer = await pdfReceiptService.generateStandeeBuffer({
+        merchantName: merchant?.businessName || branding.businessName || 'PayNova Technologies',
+        upiId: account.upiId,
+        tagline: 'Scan & Pay with Any UPI App',
+        supportPhone: (branding.supportMobiles && branding.supportMobiles[0]) || merchant?.contactPhone || '+91 7092620770',
+        websiteUrl: branding.websiteUrl || branding.customDomain || '',
+        primaryColor: branding.primaryColor || '#0866FF'
+      });
+
+      res.writeHead(200, {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'inline; filename="PayNova-Counter-Standee.pdf"',
+        'Content-Length': standeeBuffer.length
+      });
+      res.end(standeeBuffer);
+    } catch (err) {
+      console.warn('[checkout.routes] Error generating standee PDF:', err.message);
+      HttpServer.json(res, 500, { error: 'Failed to generate standee PDF' });
+    }
   });
 }

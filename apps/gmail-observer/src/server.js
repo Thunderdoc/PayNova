@@ -70,8 +70,8 @@ export class GmailObserverServer {
             : (process.env.GMAIL_CLIENT_ID || 'mock-youpi-client-id.apps.googleusercontent.com');
         }
 
-        const finalRedirectUri = 'https://pay-gmail.gauravtesting.online/oauth/callback';
-        const scope = encodeURIComponent('https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/userinfo.email');
+        const finalRedirectUri = process.env.GMAIL_REDIRECT_URI || 'http://localhost:6003/oauth/callback';
+        const scope = encodeURIComponent('https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email');
         const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(finalRedirectUri)}&response_type=code&scope=${scope}&access_type=offline&prompt=consent&include_granted_scopes=true`;
 
         res.writeHead(200, {
@@ -133,7 +133,7 @@ export class GmailObserverServer {
             return;
           }
 
-          const redirectUri = 'https://pay-gmail.gauravtesting.online/oauth/callback';
+          const redirectUri = process.env.GMAIL_REDIRECT_URI || 'http://localhost:6003/oauth/callback';
           console.log(`[Gmail Observer] Exchanging OAuth code for tokens with Client ID: ${clientId.substring(0, 15)}... and Redirect URI: ${redirectUri}`);
 
           const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
@@ -215,7 +215,7 @@ export class GmailObserverServer {
             <html>
             <head>
               <meta charset="utf-8">
-              <title>YOUPI PG — Google Connected</title>
+              <title>Hackastra Pay — Google Connected</title>
               <meta name="viewport" content="width=device-width, initial-scale=1">
               <style>
                 * { box-sizing: border-box; }

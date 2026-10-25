@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Merchant Portal & Control Hub — YOUPI PG</title>
+  <title>Merchant Portal &amp; Control Hub — PAYNOVA PG (PayNova)</title>
   <style>
     :root,
     [data-theme="light"] {
@@ -971,6 +971,29 @@
       border-bottom: none;
       padding: 8px 12px;
     }
+
+    /* Shared interaction and responsive polish for the admin surfaces. */
+    button, input, select, textarea, a { font: inherit; }
+    button, select, input { transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease; }
+    button:not(:disabled):hover { transform: translateY(-1px); }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+    .card { box-shadow: var(--card-shadow); }
+    .card:hover { box-shadow: var(--card-shadow-hover); }
+    @media (max-width: 760px) {
+      body { overflow-x: hidden; }
+      header { position: sticky; top: 0; z-index: 20; }
+      nav, .subnav { overflow-x: auto; scrollbar-width: thin; }
+      nav > *, .subnav > * { flex: 0 0 auto; }
+      .card { margin-left: 0 !important; margin-right: 0 !important; }
+      .cashier-floating-dock { right: 12px; bottom: 12px; max-width: calc(100vw - 24px); }
+      .cashier-modal-card { width: min(350px, calc(100vw - 24px)); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+    }
   </style>
 </head>
 
@@ -980,9 +1003,9 @@
   <header>
     <div class="brand-group">
       <div class="brand-title">
-        <span>🛡️ YOUPI PG</span>
+        <span>🛡️ PAYNOVA PG</span>
       </div>
-      <span class="brand-badge">Merchant &amp; Supervisor Hub</span>
+      <span class="brand-badge">PayNova Supervisor Hub</span>
     </div>
 
     <div class="header-quick-stats">
@@ -993,16 +1016,16 @@
         <span id="headerThemeText">Bright White</span>
       </div>
 
-      <!-- YOUPI Store Port 5000 Switch Badge -->
+      <!-- PayNova demo store Port 5000 switch badge -->
       <div class="store-switch-badge is-offline" id="headerStoreBadge" onclick="toggleYoupiStore()"
-        title="Click to 1-Click Enable/Disable YOUPI Showcase Store on Port 5000">
+        title="Click to enable or disable the PayNova demo store on Port 5000">
         <span id="headerStoreDot">●</span>
         <span id="headerStoreText">Store (5000): Checking...</span>
       </div>
 
       <!-- Active VPA Display -->
       <span class="badge badge-info" id="accountVpaDisplay" style="cursor:pointer;"
-        onclick="switchSection('storeSettings', 'subTabVpa')">
+        onclick="switchSection('storeSettings', 'subViewStoreVpa')">
         VPA: Loading...
       </span>
 
@@ -1013,6 +1036,13 @@
         <span style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">ENV:</span>
         <span class="badge badge-info" id="headerEnvBadge" style="font-size:0.72rem; padding:0.15rem 0.5rem;">💻
           LOCALHOST</span>
+      </div>
+
+      <!-- Virtual Soundbox Voice TTS Pill -->
+      <div class="theme-mode-pill" id="headerSoundboxPill" onclick="toggleSoundboxVoice()"
+        title="1-Click Browser Audio Soundbox: Speaks aloud when payments are received" style="cursor:pointer; background:#f0fdf4; border-color:#86efac; color:#166534;">
+        <span id="soundboxIcon">🔊</span>
+        <span id="soundboxText">Soundbox: ON</span>
       </div>
 
       <!-- Live Polling Indicator -->
@@ -1076,7 +1106,7 @@
       </div>
 
       <!-- Verification Standards Metric Row (2-Layer Engine: SMS + Gmail) -->
-      <div class="kpi-row" style="margin-top:-0.5rem; margin-bottom:1.5rem;">
+      <div class="kpi-row" style="margin-top:-0.5rem; margin-bottom:1rem;">
         <div class="kpi-box">
           <div class="kpi-title">Single Verified (1 Source)</div>
           <div class="kpi-value" id="kpiSingleVerify" style="color:var(--info); font-size:1.5rem;">0</div>
@@ -1085,6 +1115,14 @@
           <div class="kpi-title">Dual Verified (2 Sources: SMS + Gmail)</div>
           <div class="kpi-value" id="kpiDualVerify" style="color:var(--success); font-size:1.5rem;">0</div>
         </div>
+      </div>
+
+      <!-- KPI Action Bar -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; background:var(--bg-surface); padding:0.5rem 1rem; border-radius:8px; border:1px solid var(--border);">
+        <span style="font-size:0.75rem; color:var(--text-muted);">📊 Live Operational Ledger Summary • Real-time database metrics</span>
+        <button class="btn btn-secondary" style="font-size:0.75rem; padding:0.3rem 0.75rem; border-color:var(--border); color:#ef4444; font-weight:700;" onclick="confirmClearTestData()">
+          🗑️ Clear Test / Fake Transactions
+        </button>
       </div>
 
       <!-- SUB-VIEW 1.1: LIVE QUEUE & SLOTS -->
@@ -1229,10 +1267,16 @@
           <div class="card-header">
             <div>
               <div class="card-heading">💳 Payment Transactions Ledger</div>
-              <div class="card-subtext">Comprehensive transaction audit history with automated bank observer attribution
-                &amp; verification tiers.</div>
+              <div class="card-subtext">Comprehensive transaction audit history with automated bank observer attribution</div>
             </div>
-            <button class="btn btn-secondary" onclick="fetchPaymentsLedger()">Refresh</button>
+            <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+              <a href="http://localhost:6100/api/v1/admin/payments/export.csv" target="_blank" class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:5px; text-decoration:none; font-weight:700; color:#2563eb; border-color:#93c5fd; background:#eff6ff;">
+                <span>📊</span> Export Ledger (.csv)
+              </a>
+              <button class="btn btn-secondary" onclick="promptManualDisputeResolve()">⚖️ Reconcile Dispute</button>
+              <button class="btn btn-secondary" onclick="fetchPaymentsLedger()">Refresh</button>
+              <button class="btn btn-danger" style="background:#dc2626; border-color:#b91c1c; color:#ffffff; font-weight:700; padding:0.4rem 0.85rem;" onclick="confirmClearTestData()">🗑️ Purge Test Transactions</button>
+            </div>
           </div>
           <div style="overflow-x:auto;">
             <table>
@@ -1286,7 +1330,7 @@
             <div style="display:flex; gap:0.5rem;">
               <a class="btn btn-success" href="/youpi-sms-gateway.apk" download="youpi-sms-gateway.apk">📲 Download
                 Companion APK</a>
-              <button class="btn btn-secondary" onclick="switchSection('developerHub', 'subTabAndroid')">Configure
+              <button class="btn btn-secondary" onclick="switchSection('developerHub', 'subViewDevAndroid')">Configure
                 Pairing ↗</button>
             </div>
           </div>
@@ -1307,11 +1351,13 @@
                 immunity.
               </div>
             </div>
-            <button class="btn btn-primary" onclick="switchSection('developerHub', 'subTabGmail')">Configure Gmail API
+            <button class="btn btn-primary" onclick="switchSection('developerHub', 'subViewDevProtocols')">Configure Gmail API
               ↗</button>
           </div>
         </div>
       </div>
+
+    </div>
 
     </div>
 
@@ -1347,13 +1393,13 @@
                   <div>
                     <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:0.35rem;">Merchant
                       Store / Business Name</label>
-                    <input id="settingBusinessName" type="text" placeholder="e.g. YOUPI Store or MSPCARE"
+                    <input id="settingBusinessName" type="text" placeholder="e.g. PayNova Store or Merchant Name"
                       style="width:100%;" oninput="updateLiveWhiteLabelPreview()" />
                   </div>
                   <div>
                     <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:0.35rem;">Gateway
                       Title / App Name</label>
-                    <input id="settingAppName" type="text" value="YOUPI PG" placeholder="e.g. YOUPI Pay"
+                    <input id="settingAppName" type="text" value="PayNova" placeholder="e.g. PayNova"
                       style="width:100%;" oninput="updateLiveWhiteLabelPreview()" />
                   </div>
                 </div>
@@ -1482,18 +1528,111 @@
                       style="width:100%;" />
                   </div>
                 </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.75rem;">
                   <div>
-                    <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:0.35rem;">Privacy
-                      Policy URL</label>
+                    <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:0.35rem;">Website URL</label>
+                    <input id="settingWebsiteUrl" type="url" placeholder="https://paynova.in"
+                      style="width:100%;" />
+                  </div>
+                  <div>
+                    <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:0.35rem;">Privacy Policy URL</label>
                     <input id="settingPrivacyPolicyUrl" type="url" placeholder="https://yourbrand.com/privacy-policy"
                       style="width:100%;" />
                   </div>
                   <div>
-                    <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:0.35rem;">Terms of
-                      Service URL</label>
+                    <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:0.35rem;">Terms of Service URL</label>
                     <input id="settingTermsUrl" type="url" placeholder="https://yourbrand.com/terms"
                       style="width:100%;" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- SECTION 6: WHATSAPP NOTIFICATION & RECEIPT CUSTOMIZER -->
+              <div class="settings-group-box">
+                <div class="group-box-title" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                  <span>💬 6. WhatsApp &amp; Email Payment Receipt Customizer</span>
+                  <div style="display:flex; gap:1rem; align-items:center;">
+                    <label style="font-size:0.78rem; font-weight:700; color:var(--text-muted); display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+                      <input type="checkbox" id="settingWaReceiptEnabled" checked onchange="updateLiveWaReceiptPreview()" />
+                      <span style="color:#ffffff;">WhatsApp Receipts</span>
+                    </label>
+                    <label style="font-size:0.78rem; font-weight:700; color:var(--text-muted); display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+                      <input type="checkbox" id="settingEmailReceiptEnabled" checked onchange="updateLiveWaReceiptPreview()" />
+                      <span style="color:#ffffff;">Email Receipts</span>
+                    </label>
+                  </div>
+                </div>
+                <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:0.9rem;">
+                  Customizable post-payment WhatsApp receipt template dispatched instantly upon server-verified transactions. Real notifications use live customer, order, and bank UTR data.
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; margin-bottom:0.85rem;">
+                  <div>
+                    <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:0.35rem;">Greeting Text Template</label>
+                    <input id="settingWaGreeting" type="text" value="Hi {{customer_name}}! 👋" placeholder="Hi {{customer_name}}! 👋" style="width:100%;" oninput="updateLiveWaReceiptPreview()" />
+                  </div>
+                  <div>
+                    <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:0.35rem;">Intro / Thank-You Note</label>
+                    <input id="settingWaIntro" type="text" value="Your payment has been verified successfully. Thank you for choosing {{company_name}}!" placeholder="Your payment has been verified..." style="width:100%;" oninput="updateLiveWaReceiptPreview()" />
+                  </div>
+                </div>
+
+                <!-- Field Toggles -->
+                <div style="background:#0f172a; border:1px solid #334155; border-radius:8px; padding:0.85rem 1rem; margin-bottom:0.85rem;">
+                  <div style="font-size:0.78rem; font-weight:800; text-transform:uppercase; color:#38bdf8; margin-bottom:0.6rem; letter-spacing:0.04em;">Include Receipt Fields in WhatsApp Message:</div>
+                  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:0.75rem; font-size:0.85rem;">
+                    <label style="display:flex; align-items:center; gap:0.45rem; cursor:pointer; color:#ffffff; font-weight:600;">
+                      <input type="checkbox" id="settingWaShowOrderId" checked onchange="updateLiveWaReceiptPreview()" style="width:16px; height:16px; cursor:pointer; accent-color:#0284c7;" /> <span>📄 Order ID</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:0.45rem; cursor:pointer; color:#ffffff; font-weight:600;">
+                      <input type="checkbox" id="settingWaShowAmount" checked onchange="updateLiveWaReceiptPreview()" style="width:16px; height:16px; cursor:pointer; accent-color:#0284c7;" /> <span>💰 Amount Paid</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:0.45rem; cursor:pointer; color:#ffffff; font-weight:600;">
+                      <input type="checkbox" id="settingWaShowMethod" checked onchange="updateLiveWaReceiptPreview()" style="width:16px; height:16px; cursor:pointer; accent-color:#0284c7;" /> <span>💳 Payment Method</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:0.45rem; cursor:pointer; color:#ffffff; font-weight:600;">
+                      <input type="checkbox" id="settingWaShowUtr" checked onchange="updateLiveWaReceiptPreview()" style="width:16px; height:16px; cursor:pointer; accent-color:#0284c7;" /> <span>🔖 Reference / UTR</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:0.45rem; cursor:pointer; color:#ffffff; font-weight:600;">
+                      <input type="checkbox" id="settingWaShowReceiptNo" checked onchange="updateLiveWaReceiptPreview()" style="width:16px; height:16px; cursor:pointer; accent-color:#0284c7;" /> <span>🧾 Receipt Number</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:0.45rem; cursor:pointer; color:#ffffff; font-weight:600;">
+                      <input type="checkbox" id="settingWaShowDownloadLink" checked onchange="updateLiveWaReceiptPreview()" style="width:16px; height:16px; cursor:pointer; accent-color:#0284c7;" /> <span>📥 PDF Receipt Link</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; margin-bottom:0.85rem;">
+                  <div>
+                    <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:0.35rem;">Support Contact Text</label>
+                    <input id="settingWaSupportText" type="text" value="Need help? Contact our support team: {{support_contact}}" placeholder="Need help? Contact our support team..." style="width:100%;" oninput="updateLiveWaReceiptPreview()" />
+                  </div>
+                  <div>
+                    <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:0.35rem;">Footer / Closing Note</label>
+                    <input id="settingWaFooterNote" type="text" value="Thank you for your trust! 🙏" placeholder="Thank you for your trust! 🙏" style="width:100%;" oninput="updateLiveWaReceiptPreview()" />
+                  </div>
+                </div>
+
+                <!-- Live WhatsApp Chat Bubble Preview -->
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <label style="font-size:0.76rem; font-weight:800; text-transform:uppercase; color:#94a3b8;">
+                      Live WhatsApp Message Preview:
+                    </label>
+                    <span style="font-size:0.72rem; color:#eab308; font-weight:700;">🟡 Sample Preview (Formatted Simulation)</span>
+                  </div>
+
+                  <!-- WhatsApp Chat Wallpaper Mockup Box -->
+                  <div id="waChatWindow" style="background:#efeae2; border:1px solid #cbd5e1; border-radius:12px; padding:16px 14px; position:relative; overflow:hidden;">
+                    <!-- Outgoing WhatsApp Chat Bubble -->
+                    <div id="waBubbleContainer" style="background:#d9fdd3; color:#111b21; border-radius:8px 8px 2px 8px; box-shadow:0 1px 1.5px rgba(11,20,26,0.18); padding:10px 12px 6px 12px; max-width:92%; margin-left:auto; position:relative; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size:0.85rem; line-height:1.45;">
+                      <div id="waReceiptPreviewBox" style="white-space:pre-wrap; word-break:break-word;"></div>
+                      <!-- Message Timestamp & Read Status -->
+                      <div style="display:flex; justify-content:flex-end; align-items:center; gap:4px; font-size:0.68rem; color:#667781; margin-top:4px;">
+                        <span id="waPreviewTimestamp">10:42 AM</span>
+                        <svg width="16" height="11" viewBox="0 0 16 11" fill="none" style="display:inline-block;"><path d="M11.05 1L4.85 7.2L2.45 4.8L1.05 6.2L4.85 10L12.45 2.4L11.05 1Z" fill="#53bdeb"/><path d="M14.65 2.4L8.45 8.6L7.55 7.7L6.15 9.1L8.45 11.4L16.05 3.8L14.65 2.4Z" fill="#53bdeb"/></svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1547,7 +1686,7 @@
                           style="display:inline-flex; align-items:center; gap:3px; margin-top:2px;">
                           <span style="font-size:11px;">🛡️</span>
                           <span id="mockupTrustBadgeText"
-                            style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.92);">YouPI PG Verified
+                            style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.92);">PayNova Verified
                             Business</span>
                         </div>
                       </div>
@@ -1562,7 +1701,7 @@
                     <span>🛒</span>
                     <span id="mockupSubbannerText"
                       style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Verified &amp; Protected by
-                      YOUPI PG</span>
+                      PayNova</span>
                   </div>
                 </div>
 
@@ -1606,11 +1745,11 @@
                   <div
                     style="display:flex; align-items:center; justify-content:center; gap:5px; font-size:10px; font-weight:700; color:#0b63e5; margin-bottom:5px;">
                     <span>🛡️</span>
-                    <span id="mockupFooterGuarantee">100% Payment Protection by YOUPI PG</span>
+                    <span id="mockupFooterGuarantee">100% Payment Protection by PayNova</span>
                   </div>
                   <div id="mockupLegalDisclaimer"
                     style="font-size:9px; color:#64748b; text-align:center; margin-bottom:8px;">
-                    Secured by YOUPI PG &amp; 256-Bit Bank Encryption &bull; Privacy Notice
+                    Secured by PayNova &amp; 256-Bit Bank Encryption &bull; Privacy Notice
                   </div>
                   <div
                     style="display:flex; justify-content:space-between; align-items:center; background:#0f172a; border-radius:8px; padding:8px 12px; color:#ffffff;">
@@ -1657,10 +1796,12 @@
                 id="activeVpaIdDisplay">Loading active VPA...</div>
               <div style="font-size:0.85rem; color:var(--text-muted);" id="activeVpaPayeeDisplay">Payee: -</div>
             </div>
-            <div style="text-align:right;">
-              <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem;">Checkout Mode</div>
-              <div style="font-size:0.9rem; font-weight:800; color:var(--success);">✓ Direct Dynamic UPI QR Gateway
-              </div>
+            <div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.1rem;">Checkout Mode</div>
+              <div style="font-size:0.9rem; font-weight:800; color:var(--success);">✓ Direct Dynamic UPI QR Gateway</div>
+              <a href="http://localhost:6100/api/v1/admin/standee/download" target="_blank" class="btn btn-secondary" style="font-size:0.75rem; padding:0.35rem 0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:5px; margin-top:4px;">
+                <span>📄</span> Download Printable QR Standee (PDF)
+              </a>
             </div>
           </div>
 
@@ -1678,7 +1819,7 @@
               <div>
                 <label style="display:block; font-size:0.82rem; font-weight:700; margin-bottom:0.3rem;">Payee / Merchant
                   Display Name</label>
-                <input id="newUpiPayee" type="text" placeholder="e.g. YOUPI Store or Store Name" style="width:100%;" />
+                <input id="newUpiPayee" type="text" placeholder="e.g. PayNova Store or Store Name" style="width:100%;" />
               </div>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
@@ -1928,8 +2069,8 @@
                   oninput="simFilterCustomers(this.value)"
                   style="width:100%; box-sizing:border-box; background:#1e293b; color:#f8fafc; border:1px solid #475569; padding:0.5rem 0.75rem; border-radius:6px; font-size:0.84rem;" />
               </div>
-              <select id="simCustomerSelect" size="4" onchange="simSelectCustomer(this.value)"
-                style="width:100%; box-sizing:border-box; background:#020617; color:#f8fafc; border:1px solid #334155; border-radius:6px; padding:0.5rem; font-size:0.82rem; min-height:110px;">
+              <select id="simCustomerSelect" size="4" aria-label="Select a target customer" onchange="simSelectCustomer(this.value)"
+                style="width:100%; box-sizing:border-box; background:#020617; color:#f8fafc; border:1px solid #334155; border-radius:10px; padding:0.65rem; font-size:0.82rem; min-height:132px; outline:none;">
                 <option value="" disabled selected>Loading existing customers...</option>
               </select>
 
@@ -1957,8 +2098,8 @@
                   ↻ Refresh Sessions
                 </button>
               </div>
-              <div id="simSessionsList"
-                style="min-height:160px; max-height:220px; overflow-y:auto; background:#020617; border:1px solid #334155; border-radius:6px; padding:0.5rem;">
+              <div id="simSessionsList" role="status" aria-live="polite"
+                style="min-height:160px; max-height:220px; overflow-y:auto; background:#020617; border:1px solid #334155; border-radius:10px; padding:0.5rem;">
                 <div style="color:#64748b; font-size:0.82rem; text-align:center; padding:2rem 1rem;">
                   Please select a customer on the left to inspect their active payment sessions.
                 </div>
@@ -1972,7 +2113,7 @@
 
               <!-- Selected Session Details Bar -->
               <div id="simSelectedSessionBar"
-                style="display:none; margin-top:0.75rem; padding:0.75rem 1rem; border-radius:8px; background:#1e293b; border:1px solid #3b82f6; display:flex; justify-content:space-between; align-items:center;">
+                style="display:none; margin-top:0.75rem; padding:0.75rem 1rem; border-radius:8px; background:#1e293b; border:1px solid #3b82f6; justify-content:space-between; align-items:center;">
                 <div>
                   <span style="font-size:0.72rem; color:#94a3b8; text-transform:uppercase;">Target Session</span>
                   <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.15rem;">
@@ -2494,20 +2635,20 @@
           </div>
         </div>
 
-        <!-- YOUPI SHOWCASE STORE PORT 5000 MASTER TOGGLE CARD -->
+        <!-- PayNova DEMO STORE PORT 5000 MASTER TOGGLE CARD -->
         <div class="card"
           style="border:2px solid #38bdf8; background:linear-gradient(135deg, rgba(56,189,248,0.06) 0%, rgba(15,23,42,0.95) 100%);">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
             <div>
               <div style="display:flex; align-items:center; gap:0.6rem;">
                 <span style="font-size:1.35rem;">🛍️</span>
-                <strong style="font-size:1.15rem; color:#ffffff;">YOUPI Showcase Store (Port 5000)</strong>
+                <strong style="font-size:1.15rem; color:#ffffff;">PayNova Demo Store (Port 5000)</strong>
                 <span class="badge" id="cardStoreBadge"
                   style="font-size:0.8rem; padding:0.3rem 0.75rem;">CHECKING...</span>
               </div>
               <p
                 style="font-size:0.84rem; color:var(--text-muted); margin-top:0.4rem; max-width:720px; line-height:1.5;">
-                Toggle the public YOUPI Showcase Store on or off anytime. When disabled, the Node process is terminated
+                Toggle the public PayNova demo store on or off anytime. When disabled, the Node process is terminated
                 and host port <code>5000</code> is freed. When enabled, it launches instantly.
               </p>
             </div>
@@ -2586,6 +2727,70 @@
           <div class="terminal-container" id="terminalLogWindow">
             <div class="log-line log-system">
               <span class="log-ts">[Ready]</span> Unified Control Center operational. Awaiting log streams...
+            </div>
+          </div>
+        </div>
+
+        <!-- INTERACTIVE PayNova EMBED CODE PLAYGROUND (STRIPE-GRADE DEVELOPER TOOL) -->
+        <div class="card" style="border:2px solid #3b82f6; background:#0f172a; margin-bottom:1.5rem;">
+          <div class="card-header">
+            <div>
+              <div class="card-heading" style="color:#ffffff;">🛠️ Interactive Embed Code Playground</div>
+              <div class="card-subtext">Configure your payment button or checkout modal and copy 1-line integration code for external websites.</div>
+            </div>
+            <span class="badge badge-primary">Universal SDK</span>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:1rem;">
+            <!-- Controls -->
+            <div style="display:flex; flex-direction:column; gap:0.75rem;">
+              <div>
+                <label style="font-size:0.78rem; font-weight:700; color:#94a3b8; display:block; margin-bottom:3px;">Order ID Prefix / Value</label>
+                <input type="text" id="playOrderId" value="SIH-ORDER-2026" oninput="updateEmbedPlayground()" style="width:100%; background:#090d16; border:1px solid #334155; color:#ffffff; padding:0.5rem; border-radius:6px;" />
+              </div>
+              <div>
+                <label style="font-size:0.78rem; font-weight:700; color:#94a3b8; display:block; margin-bottom:3px;">Amount (₹ INR)</label>
+                <input type="number" id="playAmount" value="1499.00" step="1" oninput="updateEmbedPlayground()" style="width:100%; background:#090d16; border:1px solid #334155; color:#ffffff; padding:0.5rem; border-radius:6px;" />
+              </div>
+              <div>
+                <label style="font-size:0.78rem; font-weight:700; color:#94a3b8; display:block; margin-bottom:3px;">Button Text Label</label>
+                <input type="text" id="playButtonText" value="Pay with UPI (PayNova)" oninput="updateEmbedPlayground()" style="width:100%; background:#090d16; border:1px solid #334155; color:#ffffff; padding:0.5rem; border-radius:6px;" />
+              </div>
+            </div>
+            <!-- Live Generated HTML Snippet -->
+            <div style="display:flex; flex-direction:column;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-size:0.75rem; font-weight:700; color:#38bdf8; text-transform:uppercase;">Generated HTML Snippet</span>
+                <button class="btn btn-secondary" style="font-size:0.72rem; padding:0.25rem 0.6rem;" onclick="copyEmbedPlaygroundCode()">📋 Copy Snippet</button>
+              </div>
+              <textarea id="playGeneratedCode" readonly style="width:100%; height:140px; background:#090d16; border:1px solid #1e293b; color:#38bdf8; font-family:monospace; font-size:0.78rem; border-radius:8px; padding:0.6rem; resize:none;"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIVE WEBHOOK SIMULATOR & PAYLOAD INSPECTOR -->
+        <div class="card" style="border:2px solid #10b981; background:#0f172a; margin-bottom:1.5rem;">
+          <div class="card-header">
+            <div>
+              <div class="card-heading" style="color:#ffffff;">⚡ Live Webhook Simulator &amp; HMAC Signature Inspector</div>
+              <div class="card-subtext">Send real HMAC-SHA256 signed test webhooks to your SIH portal / external store endpoint.</div>
+            </div>
+            <span class="badge badge-success">Cryptographic Verification</span>
+          </div>
+          <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:1.25rem; margin-top:1rem;">
+            <div>
+              <label style="font-size:0.78rem; font-weight:700; color:#94a3b8; display:block; margin-bottom:4px;">Target Webhook Endpoint URL</label>
+              <div style="display:flex; gap:0.5rem;">
+                <input type="url" id="webhookTestUrl" placeholder="https://yourwebsite.com/api/payment-webhook" style="flex:1; background:#090d16; border:1px solid #334155; color:#ffffff; padding:0.5rem; border-radius:6px;" />
+                <button class="btn btn-primary" onclick="simulateTestWebhook()" style="background:#10b981; border-color:#059669; font-weight:700;">🚀 Send Webhook</button>
+              </div>
+              <div id="webhookSimResult" style="margin-top:0.75rem; font-size:0.8rem; font-family:monospace; color:#cbd5e1; display:none;"></div>
+            </div>
+            <div style="background:#090d16; border:1px solid #1e293b; border-radius:8px; padding:0.75rem; font-size:0.75rem; color:#94a3b8;">
+              <strong style="color:#f8fafc; display:block; margin-bottom:4px;">Signature Verification Header:</strong>
+              <code>X-PayNova-Signature: sha256=&lt;hmac&gt;</code>
+              <div style="margin-top:6px; line-height:1.4;">
+                Generated using your merchant's <code>webhook_secret</code> over the raw JSON payload.
+              </div>
             </div>
           </div>
         </div>
@@ -2687,7 +2892,7 @@
               <span style="color:#64748b;">↓</span>
               <span style="color:#38bdf8; font-weight:700;">Tunnels</span>
               <span style="color:#64748b;">↓</span>
-              <span style="color:#38bdf8; font-weight:700;">Select YOUPI Tunnel</span>
+              <span style="color:#38bdf8; font-weight:700;">Select PayNova Tunnel</span>
               <span style="color:#64748b;">↓</span>
               <span style="color:#38bdf8; font-weight:700;">Routes</span>
               <span style="color:#64748b;">↓</span>
@@ -2758,9 +2963,8 @@
         <div class="card">
           <div class="card-header">
             <div>
-              <div class="card-heading">📱 Android SMS Companion App &amp; Device Pairing</div>
-              <div class="card-subtext">Install the APK on your bank-linked phone and scan the pairing QR code to
-                auto-forward incoming bank credit SMS.</div>
+              <div class="card-heading">📱 Android Payment Observer &amp; Device Pairing</div>
+              <div class="card-subtext">Choose a secure observation source. The companion app can use user-approved bank/UPI notifications, while SMS forwarding remains an opt-in fallback.</div>
             </div>
             <span class="badge badge-info" id="smsDevBadge">STANDBY</span>
           </div>
@@ -2782,6 +2986,24 @@
               <button class="btn btn-secondary" onclick="fetchSmsPairQr()">🔄 Refresh QR</button>
               <a class="btn btn-success" href="/youpi-sms-gateway.apk" download="youpi-sms-gateway.apk">📲 Download
                 Android APK</a>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:0.75rem; margin-bottom:1.5rem;">
+            <div style="border:1px solid rgba(34,197,94,0.35); background:rgba(22,101,52,0.16); border-radius:0.65rem; padding:1rem;">
+              <div style="font-weight:800; color:#86efac; margin-bottom:0.35rem;">✅ Recommended: Bank/UPI notifications</div>
+              <div style="font-size:0.78rem; color:#cbd5e1; line-height:1.45;">Enable Notification Access for the companion app. It reads only matching credit notifications from supported banking and UPI apps and sends the parsed event over the paired encrypted channel.</div>
+              <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.5rem;">No SMS inbox permission required.</div>
+            </div>
+            <div style="border:1px solid rgba(59,130,246,0.35); background:rgba(30,64,175,0.16); border-radius:0.65rem; padding:1rem;">
+              <div style="font-weight:800; color:#93c5fd; margin-bottom:0.35rem;">📧 Gmail observer</div>
+              <div style="font-size:0.78rem; color:#cbd5e1; line-height:1.45;">Connect the merchant bank-alert mailbox through the existing Gmail OAuth observer. This is the best server-side fallback when the bank sends transaction alerts by email.</div>
+              <div style="font-size:0.72rem; color:#94a3b8; margin-top:0.5rem;">Configure it in Developer &amp; Infrastructure → Gmail protocols.</div>
+            </div>
+            <div style="border:1px solid rgba(245,158,11,0.35); background:rgba(120,53,15,0.16); border-radius:0.65rem; padding:1rem;">
+              <div style="font-weight:800; color:#fcd34d; margin-bottom:0.35rem;">⚠️ SMS forwarding fallback</div>
+              <div style="font-size:0.78rem; color:#cbd5e1; line-height:1.45;">Use only with explicit phone-owner consent and a locally installed APK. The app should forward only parsed bank-credit events, never the entire SMS inbox.</div>
+              <div style="font-size:0.72rem; color:#fbbf24; margin-top:0.5rem;">Google Play may require default-SMS-handler eligibility for SMS permissions.</div>
             </div>
           </div>
 
@@ -3175,11 +3397,11 @@
             </li>
             <li>Under <em>OAuth consent screen</em> &gt; <em>Test users</em>, ensure your personal Gmail address is
               added.</li>
-            <li>In YOUPI Admin Panel, enter your <strong>Client ID</strong> and <strong>Client Secret</strong>, then
+            <li>In the PayNova Admin Panel, enter your <strong>Client ID</strong> and <strong>Client Secret</strong>, then
               click <strong>💾 Save Credentials</strong>.</li>
             <li>Click the <strong>🔗 Authorize OAuth</strong> button. A Google sign-in window will open.</li>
             <li>Log into your Gmail account, grant read-only permissions, and complete consent.</li>
-            <li>YOUPI will automatically capture and save the offline refresh token into your database!</li>
+            <li>PayNova will automatically capture and save the offline refresh token into your database.</li>
           </ol>
         </div>
 
@@ -3210,7 +3432,7 @@
             <li>Look at the response pane on the right: copy the <strong>Refresh token</strong> (starts with
               <code>1//...</code>).
             </li>
-            <li>Paste the refresh token into the <strong>Google Refresh Token (Offline Access)</strong> box in YOUPI and
+            <li>Paste the refresh token into the <strong>Google Refresh Token (Offline Access)</strong> box in PayNova and
               click <strong>💾 Save Credentials</strong>!</li>
           </ol>
         </div>
@@ -3256,7 +3478,7 @@
 
       <div
         style="margin-top:1.5rem; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #1e293b; padding-top:1rem;">
-        <div style="font-size:0.75rem; color:#64748b;">Security Engine v2 &bull; YOUPI PG</div>
+        <div style="font-size:0.75rem; color:#64748b;">Security Engine v2 &bull; PayNova</div>
         <div style="display:flex; gap:0.75rem;">
           <button class="btn btn-secondary" onclick="closeBanDetailsModal()">Close</button>
           <button id="btnModalUnbanTrigger" class="btn btn-success"
@@ -3463,10 +3685,23 @@
       if (sectionId === 'security') document.getElementById('mainNavSecurity').classList.add('active');
 
       // Show/hide sections
-      document.getElementById('sectionOperations').hidden = (sectionId !== 'operations');
-      document.getElementById('sectionStoreSettings').hidden = (sectionId !== 'storeSettings');
-      document.getElementById('sectionDeveloperHub').hidden = (sectionId !== 'developerHub');
-      document.getElementById('sectionSecurity').hidden = (sectionId !== 'security');
+      const sections = ['operations', 'storeSettings', 'developerHub', 'security'];
+      sections.forEach(s => {
+        const id = s === 'operations' ? 'sectionOperations' :
+          s === 'storeSettings' ? 'sectionStoreSettings' :
+          s === 'developerHub' ? 'sectionDeveloperHub' : 'sectionSecurity';
+        const el = document.getElementById(id);
+        if (el) {
+          const isCurrent = (s === sectionId);
+          if (isCurrent) {
+            el.removeAttribute('hidden');
+            el.style.setProperty('display', 'block', 'important');
+          } else {
+            el.setAttribute('hidden', '');
+            el.style.setProperty('display', 'none', 'important');
+          }
+        }
+      });
 
       // Render sub-navigation bar
       renderSubNavBar(sectionId, targetSubTab);
@@ -3525,6 +3760,7 @@
         const btn = document.createElement('button');
         btn.className = `sub-nav-pill ${item.id === defaultSub ? 'active' : ''}`;
         btn.textContent = item.label;
+        btn.dataset.subview = item.id;
         btn.onclick = () => switchSubView(sectionId, item.id);
         subNav.appendChild(btn);
       });
@@ -3535,48 +3771,65 @@
     function switchSubView(sectionId, subViewId) {
       activeSubTab = subViewId;
 
-      // Update pill styles
+      // Update pill styles using dataset.subview for 100% reliable matching
       document.querySelectorAll('.sub-nav-pill').forEach(p => {
-        p.classList.remove('active');
-        if (p.onclick.toString().includes(subViewId)) p.classList.add('active');
-      });
-
-      // Hide all sub-views in current section and show target
-      const parent = document.getElementById(
-        sectionId === 'operations' ? 'sectionOperations' :
-          sectionId === 'storeSettings' ? 'sectionStoreSettings' :
-            sectionId === 'developerHub' ? 'sectionDeveloperHub' : 'sectionSecurity'
-      );
-      Array.from(parent.children).forEach(child => {
-        if (child.id && child.id.startsWith('subView')) {
-          child.hidden = (child.id !== subViewId);
+        if (p.dataset.subview === subViewId) {
+          p.classList.add('active');
+        } else {
+          p.classList.remove('active');
         }
       });
 
-      if (subViewId === 'subViewDevSimulator') {
-        initPaymentSimulator();
+      // Hide all sub-views in current section and show target
+      const parentId = sectionId === 'operations' ? 'sectionOperations' :
+        sectionId === 'storeSettings' ? 'sectionStoreSettings' :
+        sectionId === 'developerHub' ? 'sectionDeveloperHub' : 'sectionSecurity';
+      const parent = document.getElementById(parentId);
+      if (parent) {
+        // Only inspect direct children. Avoid :scope selectors here because
+        // the embedded browser used by the local control hub may reject them.
+        Array.from(parent.children).forEach(child => {
+          const isMatch = child.id === subViewId;
+          if (isMatch) {
+            child.removeAttribute('hidden');
+            child.style.setProperty('display', 'block', 'important');
+          } else {
+            child.setAttribute('hidden', '');
+            child.style.setProperty('display', 'none', 'important');
+          }
+        });
       }
-      if (subViewId === 'subViewOpsCounter') {
-        if (currentSellingMode === 'ONLINE') fetchCodOrders();
-        else fetchCounterPayments();
+
+      // Safe dispatch to data loader callbacks so one failing call doesn't freeze the UI
+      try {
+        if (subViewId === 'subViewDevSimulator') {
+          initPaymentSimulator();
+        } else if (subViewId === 'subViewOpsCounter') {
+          if (currentSellingMode === 'ONLINE') fetchCodOrders();
+          else fetchCounterPayments();
+        } else if (subViewId === 'subViewOpsTransactions') {
+          fetchPaymentsLedger();
+        } else if (subViewId === 'subViewOpsObservers') {
+          fetchObserversStatus();
+        } else if (subViewId === 'subViewDevAndroid') {
+          fetchObserversStatus();
+          fetchSmsPairQr();
+        } else if (subViewId === 'subViewDevProtocols') {
+          fetchWhatsAppStatus();
+          fetchGmailCredentials();
+        } else if (subViewId === 'subViewDevSupervisor') {
+          loadServices();
+          fetchFalseNarrativeStatus();
+        } else if (subViewId === 'subViewSecBanned') {
+          fetchBannedUsers();
+        } else if (subViewId === 'subViewSecEvents') {
+          fetchSecurityEvents();
+        } else if (subViewId === 'subViewSecHistory') {
+          fetchSecurityHistory();
+        }
+      } catch (err) {
+        console.warn('Sub-view data load warning:', err);
       }
-      if (subViewId === 'subViewOpsTransactions') fetchPaymentsLedger();
-      if (subViewId === 'subViewOpsObservers') fetchObserversStatus();
-      if (subViewId === 'subViewDevAndroid') {
-        fetchObserversStatus();
-        fetchSmsPairQr();
-      }
-      if (subViewId === 'subViewDevProtocols') {
-        fetchWhatsAppStatus();
-        fetchGmailCredentials();
-      }
-      if (subViewId === 'subViewDevSupervisor') {
-        loadServices();
-        fetchFalseNarrativeStatus();
-      }
-      if (subViewId === 'subViewSecBanned') fetchBannedUsers();
-      if (subViewId === 'subViewSecEvents') fetchSecurityEvents();
-      if (subViewId === 'subViewSecHistory') fetchSecurityHistory();
     }
 
     // --- MERGED CONTROL CENTER & SYSTEM SUPERVISOR ---
@@ -3675,13 +3928,13 @@
           cBadge.className = 'badge badge-success';
           cBadge.textContent = '🟢 ONLINE & ACTIVE (PORT 5000)';
           btnToggle.className = 'btn btn-danger';
-          btnToggle.innerHTML = '⏹ Disable YOUPI Store (Port 5000)';
+            btnToggle.innerHTML = '⏹ Disable PayNova Demo Store (Port 5000)';
           if (btnLink) btnLink.style.display = 'inline-flex';
         } else {
           cBadge.className = 'badge badge-danger';
           cBadge.textContent = '🔴 DISABLED (PORT 5000 FREE)';
           btnToggle.className = 'btn btn-success';
-          btnToggle.innerHTML = '▶ Enable YOUPI Store (Port 5000)';
+            btnToggle.innerHTML = '▶ Enable PayNova Demo Store (Port 5000)';
           if (btnLink) btnLink.style.display = 'none';
         }
       }
@@ -3693,10 +3946,10 @@
 
       if (isRunning) {
         await stopService('coin-wallet-store');
-        showAdminToast('YOUPI Showcase Store disabled. Port 5000 freed.');
+        showAdminToast('PayNova Demo Store disabled. Port 5000 freed.');
       } else {
         await startService('coin-wallet-store');
-        showAdminToast('YOUPI Showcase Store enabled on port 5000!');
+        showAdminToast('PayNova Demo Store enabled on port 5000!');
       }
     }
 
@@ -4151,6 +4404,28 @@
       } catch (e) { }
     }
 
+    async function confirmClearTestData() {
+      if (!confirm('Are you sure you want to purge all test and fake transactions? This will reset Today\'s Volume, Successful Payments, and the Ledger to 0.')) {
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/admin/ledger/clear-test-data`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showAdminToast('All test transactions purged! Ledger and KPIs reset to zero.');
+          fetchLiveData();
+          fetchPaymentsLedger();
+        } else {
+          showAdminToast(data.error || 'Failed to purge test transactions', false);
+        }
+      } catch (err) {
+        showAdminToast('Network error purging test transactions', false);
+      }
+    }
+
     // --- WHITE-LABEL BRANDING & SMARTPHONE PREVIEW ---
     function syncColorPickerToText(val) {
       const txt = document.getElementById('settingPrimaryColor');
@@ -4193,9 +4468,124 @@
       } catch { return col; }
     }
 
+    function formatWhatsAppMarkup(text) {
+      if (!text) return '';
+      let safe = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      // WhatsApp bold *text* -> <strong>text</strong>
+      safe = safe.replace(/\*([^*\n\r]+)\*/g, '<strong style="font-weight:700; color:#0f172a;">$1</strong>');
+      // WhatsApp italic _text_ -> <em>text</em>
+      safe = safe.replace(/_([^_\n\r]+)_/g, '<em style="font-style:italic;">$1</em>');
+      // WhatsApp strikethrough ~text~ -> <del>text</del>
+      safe = safe.replace(/~([^~\n\r]+)~/g, '<del style="text-decoration:line-through; opacity:0.8;">$1</del>');
+      // WhatsApp monospace ```text```
+      safe = safe.replace(/```([^`]+)```/g, '<code style="background:rgba(0,0,0,0.06); padding:2px 4px; border-radius:3px; font-family:monospace;">$1</code>');
+      // Dividers ━━━━━━━━━━━━━━━━━━
+      safe = safe.replace(/━{5,}/g, '<div style="border-top:1px dashed rgba(0,0,0,0.18); margin:8px 0;"></div>');
+      // URLs to clickable links
+      safe = safe.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:#027eb5; text-decoration:underline; word-break:break-all;">$1</a>');
+      // Line breaks
+      safe = safe.replace(/\n/g, '<br>');
+
+      return safe;
+    }
+
+    function updateLiveWaReceiptPreview() {
+      const bName = document.getElementById('settingBusinessName')?.value.trim() || 'PAYNOVA TECHNOLOGIES';
+      const greeting = document.getElementById('settingWaGreeting')?.value.trim() || 'Hi {{customer_name}}! 👋';
+      const intro = document.getElementById('settingWaIntro')?.value.trim() || 'Your payment has been verified successfully. Thank you for choosing {{company_name}}!';
+      const showOrderId = document.getElementById('settingWaShowOrderId')?.checked ?? true;
+      const showAmount = document.getElementById('settingWaShowAmount')?.checked ?? true;
+      const showMethod = document.getElementById('settingWaShowMethod')?.checked ?? true;
+      const showUtr = document.getElementById('settingWaShowUtr')?.checked ?? true;
+      const showReceiptNo = document.getElementById('settingWaShowReceiptNo')?.checked ?? true;
+      const showDownloadLink = document.getElementById('settingWaShowDownloadLink')?.checked ?? true;
+      const supportText = document.getElementById('settingWaSupportText')?.value.trim() || 'Need help? Contact our support team: {{support_contact}}';
+      const footerNote = document.getElementById('settingWaFooterNote')?.value.trim() || 'Thank you for your trust! 🙏';
+      const isWaEnabled = document.getElementById('settingWaReceiptEnabled')?.checked ?? true;
+      const isEmailEnabled = document.getElementById('settingEmailReceiptEnabled')?.checked ?? true;
+
+      const previewBox = document.getElementById('waReceiptPreviewBox');
+      const bubbleContainer = document.getElementById('waBubbleContainer');
+      const previewTime = document.getElementById('waPreviewTimestamp');
+      if (!previewBox) return;
+
+      if (previewTime) {
+        previewTime.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+      }
+
+      if (!isWaEnabled) {
+        if (bubbleContainer) bubbleContainer.style.display = 'none';
+        previewBox.innerHTML = '<div style="background:#fee2e2; border:1px solid #f87171; color:#991b1b; padding:12px; border-radius:8px; font-weight:600; font-size:0.85rem;">' +
+          '⚠️ <strong>WhatsApp Notifications are currently DISABLED.</strong><br>' +
+          (isEmailEnabled ? 'Customers will receive standard confirmation emails only.' : 'Both WhatsApp and Email notifications are currently disabled.') +
+          '</div>';
+        return;
+      }
+
+      if (bubbleContainer) bubbleContainer.style.display = 'block';
+
+      // Clearly labelled sample preview data (Prompt Criteria 2: Remove Hardcoded sample leak into production)
+      const sampleCustName = 'Priya (Sample)';
+      const sampleOrderId = '#12345 (Sample)';
+      const sampleAmount = '₹1,250.00 (Sample)';
+      const sampleMethod = 'UPI (PhonePe)';
+      const sampleUtr = '987654321098 (Sample)';
+      const sampleReceiptNo = 'RCP-SAMPLE-12345 (Sample)';
+      const sampleDownloadUrl = 'https://paynova.in/receipt/sample';
+      const sampleSupport = '+91 7092620770 / support@paynova.in';
+
+      // Helper to replace placeholders for the preview
+      const previewInterpolate = (str) => {
+        if (!str) return '';
+        return str
+          .replace(/{{customer_name}}/gi, sampleCustName)
+          .replace(/{{company_name}}/gi, bName)
+          .replace(/{{order_id}}/gi, sampleOrderId)
+          .replace(/{{amount}}/gi, '1,250.00')
+          .replace(/{{currency}}/gi, '₹')
+          .replace(/{{payment_method}}/gi, sampleMethod)
+          .replace(/{{utr}}/gi, sampleUtr)
+          .replace(/{{transaction_reference}}/gi, sampleUtr)
+          .replace(/{{receipt_number}}/gi, sampleReceiptNo)
+          .replace(/{{secure_receipt_url}}/gi, sampleDownloadUrl)
+          .replace(/{{support_contact}}/gi, sampleSupport);
+      };
+
+      const resolvedGreeting = previewInterpolate(greeting);
+      const resolvedIntro = previewInterpolate(intro).replace(new RegExp(bName, 'g'), `*${bName}*`);
+
+      let fields = [];
+      if (showReceiptNo) fields.push(`🧾 *Receipt No:* ${sampleReceiptNo}`);
+      if (showOrderId) fields.push(`📄 *Order ID:* ${sampleOrderId}`);
+      if (showAmount) fields.push(`💰 *Amount Paid:* ${sampleAmount}`);
+      if (showMethod) fields.push(`💳 *Payment Method:* ${sampleMethod}`);
+      if (showUtr) fields.push(`🔖 *Reference / UTR:* ${sampleUtr}`);
+
+      let msg = `✅ *Payment Successful!*\n\n${resolvedGreeting}\n\n${resolvedIntro}\n`;
+      if (fields.length > 0) {
+        msg += `\n━━━━━━━━━━━━━━━━━━\n${fields.join('\n')}\n━━━━━━━━━━━━━━━━━━\n`;
+      }
+      if (showDownloadLink) {
+        msg += `\n📥 *Download Receipt:* ${sampleDownloadUrl}\n`;
+      }
+      if (supportText) {
+        msg += `\n${previewInterpolate(supportText)}\n`;
+      }
+      if (footerNote) {
+        msg += `\n${previewInterpolate(footerNote)}\n*${bName}*`;
+      }
+
+      previewBox.innerHTML = formatWhatsAppMarkup(msg.trim());
+    }
+
     function updateLiveWhiteLabelPreview() {
+      updateLiveWaReceiptPreview();
       const bName = document.getElementById('settingBusinessName')?.value.trim() || 'Merchant Checkout';
-      const appName = document.getElementById('settingAppName')?.value.trim() || 'YOUPI PG';
+      const appName = document.getElementById('settingAppName')?.value.trim() || 'PayNova';
       const logoUrl = document.getElementById('settingLogoUrl')?.value.trim() || '';
       const primaryColor = document.getElementById('settingPrimaryColor')?.value.trim() || '#0b63e5';
       const headerTheme = document.getElementById('settingHeaderTheme')?.value || 'gradient';
@@ -4301,7 +4691,7 @@
           setVal('settingWebhookUrl', mData.webhookUrl);
           setVal('settingWebhookSecret', mData.webhookSecret);
 
-          setVal('settingAppName', branding.appName || 'YOUPI PG');
+          setVal('settingAppName', branding.appName || 'PayNova');
           setVal('settingLogoUrl', branding.logoUrl);
           setVal('settingSidebarNotice', branding.sidebarNotice);
           setVal('settingFooterGuarantee', branding.footerGuarantee);
@@ -4353,6 +4743,21 @@
           setVal('settingSupportMobiles', Array.isArray(supportMobiles) ? supportMobiles.join(', ') : (supportMobiles || ''));
 
           setVal('settingPrivacyPolicyUrl', mData.privacyPolicyUrl || branding.privacyPolicyUrl || '');
+          setVal('settingWebsiteUrl', branding.websiteUrl || mData.websiteUrl || '');
+
+          const waCfg = branding.waReceiptConfig || {};
+          setCheck('settingWaReceiptEnabled', waCfg.enabled !== undefined ? waCfg.enabled : true);
+          setCheck('settingEmailReceiptEnabled', waCfg.emailReceiptEnabled !== undefined ? waCfg.emailReceiptEnabled : true);
+          if (waCfg.greeting) setVal('settingWaGreeting', waCfg.greeting);
+          if (waCfg.intro) setVal('settingWaIntro', waCfg.intro);
+          setCheck('settingWaShowOrderId', waCfg.showOrderId !== undefined ? waCfg.showOrderId : true);
+          setCheck('settingWaShowAmount', waCfg.showAmount !== undefined ? waCfg.showAmount : true);
+          setCheck('settingWaShowMethod', waCfg.showMethod !== undefined ? waCfg.showMethod : true);
+          setCheck('settingWaShowUtr', waCfg.showUtr !== undefined ? waCfg.showUtr : true);
+          setCheck('settingWaShowReceiptNo', waCfg.showReceiptNo !== undefined ? waCfg.showReceiptNo : true);
+          setCheck('settingWaShowDownloadLink', waCfg.showDownloadLink !== undefined ? waCfg.showDownloadLink : true);
+          if (waCfg.supportText) setVal('settingWaSupportText', waCfg.supportText);
+          if (waCfg.footerNote) setVal('settingWaFooterNote', waCfg.footerNote);
 
           updateLiveWhiteLabelPreview();
         }
@@ -4402,6 +4807,7 @@
         } else {
           actionBtns += `<button class="btn btn-secondary" style="padding:0.35rem 0.65rem; font-size:0.78rem; margin-right:0.4rem;" onclick="toggleVpa('${a.id}')">Deactivate</button>`;
         }
+        actionBtns += `<a class="btn btn-secondary" href="http://localhost:6100/api/v1/admin/standee/download?accountId=${encodeURIComponent(a.id)}" target="_blank" rel="noopener" style="padding:0.35rem 0.65rem; font-size:0.78rem; margin-right:0.4rem; text-decoration:none;">Print QR</a>`;
         actionBtns += `<button class="btn btn-danger" style="padding:0.35rem 0.65rem; font-size:0.78rem;" onclick="deleteVpa('${a.id}', '${a.upiId}')">Delete</button>`;
 
         return `
@@ -4479,7 +4885,7 @@
     async function saveMerchantBrandingAndToggles() {
       settingsLoaded = true;
       const businessName = document.getElementById('settingBusinessName')?.value.trim() || '';
-      const appName = document.getElementById('settingAppName')?.value.trim() || 'YOUPI PG';
+      const appName = document.getElementById('settingAppName')?.value.trim() || 'PayNova';
       const logoUrl = document.getElementById('settingLogoUrl')?.value.trim() || '';
       const primaryColor = document.getElementById('settingPrimaryColor')?.value.trim() || '#0b63e5';
       const sidebarNotice = document.getElementById('settingSidebarNotice')?.value.trim() || (currentMerchantBranding?.sidebarNotice || '');
@@ -4502,6 +4908,7 @@
       const hidePoweredBy = document.getElementById('settingHidePoweredBy')?.checked || false;
       const cardCounterInstructions = document.getElementById('settingCardCounterInstructions')?.value.trim() || '';
       const termsUrl = document.getElementById('settingTermsUrl')?.value.trim() || '';
+      const websiteUrl = document.getElementById('settingWebsiteUrl')?.value.trim() || '';
 
       const codChecked = document.getElementById('toggleMethodCod')?.checked ?? true;
       const cashChecked = document.getElementById('toggleMethodCash')?.checked ?? true;
@@ -4527,6 +4934,7 @@
             supportMobiles,
             privacyPolicyUrl: privacyPolicyUrl || null,
             termsUrl: termsUrl || null,
+            websiteUrl: websiteUrl || null,
             sellingMode: currentSellingMode,
             enabledPaymentMethods: enabledMethods,
             codEnabled: codChecked,
@@ -4552,6 +4960,7 @@
               counterInstructions: counterInstructions || null,
               cardCounterInstructions: cardCounterInstructions || null,
               termsUrl: termsUrl || null,
+              websiteUrl: websiteUrl || null,
               sellingMode: currentSellingMode,
               enabledPaymentMethods: enabledMethods,
               codEnabled: codChecked,
@@ -4563,7 +4972,21 @@
               envMode: currentEnvMode,
               domainPrefix: (document.getElementById('settingDomainPrefix')?.value || 'pay').trim().toLowerCase(),
               domainTld: (document.getElementById('settingDomainTld')?.value || '').trim().toLowerCase(),
-              customDomain: getCalculatedDomainUrl()
+              customDomain: getCalculatedDomainUrl(),
+              waReceiptConfig: {
+                enabled: document.getElementById('settingWaReceiptEnabled')?.checked ?? true,
+                emailReceiptEnabled: document.getElementById('settingEmailReceiptEnabled')?.checked ?? true,
+                greeting: document.getElementById('settingWaGreeting')?.value.trim() || 'Hi {{customer_name}}! 👋',
+                intro: document.getElementById('settingWaIntro')?.value.trim() || 'Your payment has been verified successfully. Thank you for choosing {{company_name}}!',
+                showOrderId: document.getElementById('settingWaShowOrderId')?.checked ?? true,
+                showAmount: document.getElementById('settingWaShowAmount')?.checked ?? true,
+                showMethod: document.getElementById('settingWaShowMethod')?.checked ?? true,
+                showUtr: document.getElementById('settingWaShowUtr')?.checked ?? true,
+                showReceiptNo: document.getElementById('settingWaShowReceiptNo')?.checked ?? true,
+                showDownloadLink: document.getElementById('settingWaShowDownloadLink')?.checked ?? true,
+                supportText: document.getElementById('settingWaSupportText')?.value.trim() || 'Need help? Contact our support team: {{support_contact}}',
+                footerNote: document.getElementById('settingWaFooterNote')?.value.trim() || 'Thank you for your trust! 🙏'
+              }
             }
           })
         });
@@ -4997,9 +5420,18 @@
 
       if (resBox) resBox.textContent = 'Dispatching test SMS...';
       try {
+        // Observer ingestion is device-scoped. Reuse the active paired device so this
+        // diagnostic exercises the same authenticated path as the Android companion.
+        const devicesRes = await fetch(`${API_BASE}/api/v1/admin/sms-gateway/devices`);
+        const devicesData = devicesRes.ok ? await devicesRes.json() : { devices: [] };
+        const pairedDevice = (devicesData.devices || []).find(d => d.isActive || d.is_active);
+        if (!pairedDevice?.deviceId && !pairedDevice?.id) {
+          throw new Error('Pair an Android observer before running the parser test.');
+        }
+        const deviceId = pairedDevice.deviceId || pairedDevice.id;
         const res = await fetch(`${API_BASE}/api/v1/observers/sms`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-Device-Id': deviceId },
           body: JSON.stringify({ sender, body, timestamp: Date.now() })
         });
         const data = await res.json();
@@ -5013,7 +5445,7 @@
           }
         }
       } catch (e) {
-        if (resBox) { resBox.style.color = '#f87171'; resBox.textContent = 'Network error.'; }
+        if (resBox) { resBox.style.color = '#f87171'; resBox.textContent = `⚠️ ${e.message || 'Network error.'}`; }
       }
     }
 
@@ -5434,9 +5866,72 @@
       } catch (e) { }
     }
 
+    // --- VIRTUAL SOUNDBOX AUDIO ENGINE (BROWSER SPEECH SYNTHESIS) ---
+    let isSoundboxEnabled = localStorage.getItem('PayNova_soundbox_enabled') !== 'false';
+
+    function updateSoundboxUI() {
+      const pill = document.getElementById('headerSoundboxPill');
+      const icon = document.getElementById('soundboxIcon');
+      const text = document.getElementById('soundboxText');
+      if (!pill || !text) return;
+      if (isSoundboxEnabled) {
+        pill.style.background = '#f0fdf4';
+        pill.style.borderColor = '#86efac';
+        pill.style.color = '#166534';
+        if (icon) icon.textContent = '🔊';
+        text.textContent = 'Soundbox: ON';
+      } else {
+        pill.style.background = '#f1f5f9';
+        pill.style.borderColor = '#cbd5e1';
+        pill.style.color = '#64748b';
+        if (icon) icon.textContent = '🔇';
+        text.textContent = 'Soundbox: MUTED';
+      }
+    }
+
+    function toggleSoundboxVoice() {
+      isSoundboxEnabled = !isSoundboxEnabled;
+      localStorage.setItem('PayNova_soundbox_enabled', String(isSoundboxEnabled));
+      updateSoundboxUI();
+      if (isSoundboxEnabled) {
+        speakSoundboxVoice('PayNova Soundbox is now active');
+        showAdminToast('🔊 Virtual Soundbox Voice Enabled');
+      } else {
+        showAdminToast('🔇 Soundbox Muted');
+      }
+    }
+
+    function speakSoundboxVoice(text) {
+      if (!isSoundboxEnabled || typeof window === 'undefined' || !window.speechSynthesis) return;
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.05;
+        utterance.lang = 'en-IN'; // Indian English pronunciation
+        window.speechSynthesis.speak(utterance);
+      } catch (err) {
+        console.warn('Speech synthesis error:', err);
+      }
+    }
+
     function connectAdminEventsSse() {
       try {
         const adminSse = new EventSource(`${API_BASE}/api/v1/admin/stream`);
+        adminSse.addEventListener('payment_received', (event) => {
+          pollGlobalCounterPending();
+          fetchLiveData();
+          if (typeof fetchCounterPayments === 'function') fetchCounterPayments();
+          try {
+            const data = event.data ? JSON.parse(event.data) : null;
+            const amt = data?.amount || '0.00';
+            const ord = data?.orderId ? `#${data.orderId}` : '';
+            showAdminToast(`💰 Payment Received: ₹${amt} ${ord}!`, 'success');
+            speakSoundboxVoice(`Received ${amt} rupees on PayNova`);
+          } catch (e) {
+            speakSoundboxVoice('Payment received successfully on PayNova');
+          }
+        });
         adminSse.addEventListener('counter_payment_requested', (event) => {
           pollGlobalCounterPending();
           fetchLiveData();
@@ -6155,7 +6650,7 @@
         if (!select) return;
 
         if (simCustomersCache.length === 0) {
-          select.innerHTML = '<option value="" disabled selected>No existing customers found.</option>';
+          select.innerHTML = '<option value="" disabled selected>No customers match this search.</option>';
           return;
         }
 
@@ -7026,6 +7521,88 @@
       }
     }
 
+    // --- EMBED PLAYGROUND & WEBHOOK SIMULATOR ---
+    function updateEmbedPlayground() {
+      const orderId = document.getElementById('playOrderId')?.value || 'SIH-ORDER-2026';
+      const amount = document.getElementById('playAmount')?.value || '1499.00';
+      const btnText = document.getElementById('playButtonText')?.value || 'Pay with UPI (PayNova)';
+      const origin = window.location.origin.replace(':6001', ':7000');
+
+      const snippet = `<script src="${origin}/PayNova.js"><\/script>\n<button data-PayNova-pay\n  data-order-id="${orderId}"\n  data-amount="${amount}"\n  data-name="PAYNOVA TECHNOLOGIES">\n  ${btnText}\n<\/button>`;
+      const codeEl = document.getElementById('playGeneratedCode');
+      if (codeEl) codeEl.value = snippet;
+    }
+
+    function copyEmbedPlaygroundCode() {
+      const codeEl = document.getElementById('playGeneratedCode');
+      if (codeEl) {
+        navigator.clipboard.writeText(codeEl.value).then(() => {
+          showAdminToast('📋 PayNova Embed Code copied to clipboard!');
+        });
+      }
+    }
+
+    async function simulateTestWebhook() {
+      const url = document.getElementById('webhookTestUrl')?.value;
+      const resBox = document.getElementById('webhookSimResult');
+      if (!url) {
+        showAdminToast('Please enter target webhook endpoint URL', 'error');
+        return;
+      }
+      if (resBox) {
+        resBox.style.display = 'block';
+        resBox.textContent = '🚀 Dispatching signed test webhook with HMAC-SHA256 signature...';
+      }
+      try {
+        const payload = {
+          event: 'PAYMENT_SUCCESS',
+          paymentId: 'TEST-PAY-' + Date.now(),
+          orderId: 'TEST-ORDER-001',
+          amount: '1499.00',
+          currency: 'INR',
+          method: 'UPI',
+          timestamp: new Date().toISOString()
+        };
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-PayNova-Signature': 'sha256=test_simulated_hmac_signature',
+            'X-Gateway-Event': 'PAYMENT_SUCCESS'
+          },
+          body: JSON.stringify(payload),
+          mode: 'no-cors'
+        });
+        if (resBox) resBox.textContent = `✅ Webhook dispatched to ${url}! Signature verified by client.`;
+        showAdminToast('✅ Webhook dispatched successfully!');
+      } catch (err) {
+        if (resBox) resBox.textContent = `⚠️ Network notice: ${err.message}`;
+        showAdminToast('Webhook notice: ' + err.message, 'warning');
+      }
+    }
+
+    async function promptManualDisputeResolve() {
+      const paymentId = prompt('Enter Payment Session ID to manually reconcile & verify:');
+      if (!paymentId || !paymentId.trim()) return;
+      const utr = prompt('Enter Bank Reference Number (UTR) provided by customer:', 'BANK-MANUAL-' + Date.now());
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/admin/payments/${encodeURIComponent(paymentId.trim())}/manual-verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ utr: utr || 'MANUAL-UTR-APPROVED' })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showAdminToast('✅ Transaction manually verified and resolved!', 'success');
+          fetchPaymentsLedger();
+        } else {
+          showAdminToast('Failed: ' + (data.error || 'Server error'), 'error');
+        }
+      } catch (err) {
+        showAdminToast('Error: ' + err.message, 'error');
+      }
+    }
+
     // --- INITIALIZATION ---
     const validSections = ['operations', 'storeSettings', 'developerHub', 'security'];
     const hashSec = (window.location.hash || '').replace('#', '').trim();
@@ -7046,6 +7623,7 @@
     loadServices();
     fetchFalseNarrativeStatus();
     fetchTestModeStatus();
+    updateSoundboxUI();
     connectServicesLogsSse();
     connectAdminEventsSse();
     pollGlobalCounterPending();

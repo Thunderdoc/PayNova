@@ -99,15 +99,21 @@ export class BankEmailParser {
     }
 
     // 2. Extract Bank Reference / UTR Number
-    // Matches: UTR: 123456789012, Ref no: UTR-HDFC-9911, Ref: UTR-GMAIL-777, UPI/CR/123456789/
+    // Matches: UTR: 123456789012, Ref no: 123456789012, UPI Ref: 123456789012, RRN: 123456789012, Slice Ref: ...
     let bankRef;
-    const refMatch = combinedText.match(/(?:utr|ref(?:\s*no)?|txn(?:\s*id)?|rrn)[:\s#]+([a-zA-Z0-9\-_]{6,35})/i);
+    const refMatch = combinedText.match(/(?:upi\s*(?:ref|reference)?(?:\s*no)?|utr|ref(?:\s*no)?|txn(?:\s*id)?|transaction\s*id|rrn)[:\s#.-]+([a-zA-Z0-9\-_]{6,35})/i);
     if (refMatch && refMatch[1]) {
       bankRef = refMatch[1].trim();
     } else {
-      const upiCrMatch = combinedText.match(/UPI\/CR\/([a-zA-Z0-9\-_]+)/i);
+      const upiCrMatch = combinedText.match(/(?:UPI\/CR\/|UPI-CR-|CR\/)([a-zA-Z0-9\-_]+)/i);
       if (upiCrMatch && upiCrMatch[1]) {
         bankRef = upiCrMatch[1].trim();
+      } else {
+        // Standalone 12-digit Indian banking UPI reference number
+        const standalone12Digit = combinedText.match(/\b([0-9]{12})\b/);
+        if (standalone12Digit && standalone12Digit[1]) {
+          bankRef = standalone12Digit[1].trim();
+        }
       }
     }
 

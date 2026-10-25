@@ -40,6 +40,8 @@ import {
   PaymentVerificationPipeline
 } from '@youpi/core';
 import { HttpServer } from './server.js';
+import { EmailReceiptService } from './services/email-receipt.service.js';
+import { pdfReceiptService } from './services/pdf-receipt.service.js';
 import { registerPaymentRoutes } from './routes/payments.routes.js';
 import { registerCheckoutRoutes } from './routes/checkout.routes.js';
 import { registerPollerRoutes } from './routes/pollers.routes.js';
@@ -147,8 +149,10 @@ export function createPaymentApp(customDb = null, options = {}) {
     return promoted;
   }
 
+  const emailReceiptService = new EmailReceiptService({ merchantRepo });
+
   // When a payment succeeds, fails, expires, or cancels: dispatch webhook & promote next queued customer
-  eventEmitter.on('PAYMENT.SUCCESS', (data) => {
+  eventEmitter.on('PAYMENT.SUCCESS', async (data) => {
     const session = sessionRepo.findById(data.paymentId);
     if (session) {
       server.broadcastSse(session.id, 'status_change', {
@@ -157,8 +161,173 @@ export function createPaymentApp(customDb = null, options = {}) {
         verificationTag: data.verificationTag || session.verificationTag,
         sources: data.sources || session.verificationSources
       });
+      server.broadcastSse('admin_counter_events', 'payment_received', {
+        sessionId: session.id,
+        orderId: session.orderId,
+        amount: (Number(session.amountPaise) / 100).toFixed(2),
+        amountPaise: session.amountPaise.toString(),
+        currency: session.currency || 'INR',
+        customerName: session.metadata?.customerName || null
+      });
       webhookEngine.dispatch('SUCCESS', session).catch(() => {});
       handleSlotFreedAndPromote(session.receivingAccountId);
+
+      // Automated Customer Confirmation & PDF Receipt Generation
+      try {
+        const customer = session.customerId ? customerRepo.findById(session.customerId) : null;
+        const targetEmail = customer?.email || session.metadata?.customerEmail;
+        const targetPhone = customer?.mobileNumber || session.metadata?.customerPhone || session.metadata?.phone;
+        const displayAmount = session.amountPaise ? (Number(session.amountPaise) / 100).toFixed(2) : '1.00';
+        const merchant = merchantRepo.findById(session.merchantId);
+        const branding = merchant?.branding || {};
+        const brandName = merchant?.businessName || branding.businessName || 'PayNova';
+        const utrVal = session.utr || session.bankReference || data.bankReference || 'Direct UPI Settlement';
+        const custName = customer?.name || session.metadata?.customerName || 'Valued Customer';
+        let methodStr = session.method || 'UPI';
+        if (methodStr === 'UPI') {
+          methodStr = 'UPI';
+        } else if (!methodStr.startsWith('UPI')) {
+          methodStr = `UPI (${methodStr})`;
+        }
+        const supportPhone = (branding.supportMobiles && branding.supportMobiles[0]) || '+91 7092620770';
+        const supportEmail = (branding.supportEmails && branding.supportEmails[0]) || 'ankitraj2163@gmail.com';
+        const supportContact = supportPhone || supportEmail;
+        const websiteUrl = branding.websiteUrl || 'https://paynova.in';
+
+        // Collision-resistant unique receipt number & secure download link
+        const receiptNumber = session.metadata?.receiptNumber || `RCP-${Date.now().toString(36).toUpperCase()}-${session.orderId.replace(/[^A-Z0-9]/gi, '').slice(-6)}`;
+        const secureReceiptUrl = `${checkoutBaseUrl || 'http://localhost:7000'}/api/v1/receipts/${session.id}/download`;
+
+        // Generate vector PDF receipt buffer
+        let pdfBuffer = null;
+        try {
+          pdfBuffer = await pdfReceiptService.generateReceiptBuffer({
+            receiptNumber,
+            orderId: session.orderId,
+            amount: displayAmount,
+            currency: session.currency || 'INR',
+            customerName: custName,
+            customerEmail: targetEmail,
+            customerPhone: targetPhone,
+            paymentMethod: methodStr,
+            utr: utrVal,
+            paidAt: session.completedAt || new Date().toISOString(),
+            businessName: brandName,
+            supportEmail,
+            supportPhone,
+            websiteUrl
+          });
+        } catch (pdfErr) {
+          console.warn('[payment-api] Error generating PDF receipt buffer:', pdfErr.message);
+        }
+
+        // Persist receipt metadata against session
+        try {
+          sessionRepo.update(session.id, {
+            metadata: {
+              ...(session.metadata || {}),
+              receiptNumber,
+              secureReceiptUrl,
+              receiptGeneratedAt: Date.now()
+            }
+          });
+        } catch {}
+
+        const waCfg = branding.waReceiptConfig || {};
+        const isEmailEnabled = waCfg.emailReceiptEnabled !== false;
+
+        // 1. Send Email Receipt with attached PDF & download link
+        if (isEmailEnabled && targetEmail) {
+          emailReceiptService.sendPaymentReceipt({
+            toEmail: targetEmail,
+            customerName: custName,
+            orderId: session.orderId,
+            receiptNumber,
+            receiptUrl: secureReceiptUrl,
+            amount: displayAmount,
+            utr: utrVal,
+            paymentMethod: methodStr,
+            businessName: brandName,
+            pdfBuffer,
+            pdfFileName: `Receipt-${session.orderId}.pdf`
+          }).catch(err => {
+            console.warn('[payment-api] Background email receipt dispatch error:', err.message);
+          });
+        }
+
+        // 2. Send Instant WhatsApp Payment Receipt via connected Berry Protocol socket
+        const isWaEnabled = waCfg.enabled !== undefined ? waCfg.enabled : true;
+
+        if (isWaEnabled && targetPhone && whatsappBerryService && whatsappBerryService.isConnected) {
+          if (!global._waReceiptSentSet) global._waReceiptSentSet = new Set();
+          const idempotencyKey = `wa_${session.id}_${session.orderId}`;
+          if (!global._waReceiptSentSet.has(idempotencyKey)) {
+            global._waReceiptSentSet.add(idempotencyKey);
+
+            const cleanPhone = String(targetPhone).replace(/\D/g, '');
+            const waNumber = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+
+            // Template interpolation helper
+            const applyPlaceholders = (tmpl) => {
+              if (!tmpl) return '';
+              return tmpl
+                .replace(/{{customer_name}}/gi, custName)
+                .replace(/{{company_name}}/gi, brandName)
+                .replace(/{{order_id}}/gi, session.orderId)
+                .replace(/{{amount}}/gi, displayAmount)
+                .replace(/{{currency}}/gi, '₹')
+                .replace(/{{payment_method}}/gi, methodStr)
+                .replace(/{{utr}}/gi, utrVal)
+                .replace(/{{transaction_reference}}/gi, utrVal)
+                .replace(/{{receipt_number}}/gi, receiptNumber)
+                .replace(/{{secure_receipt_url}}/gi, secureReceiptUrl)
+                .replace(/{{support_contact}}/gi, supportContact);
+            };
+
+            const rawGreeting = waCfg.greeting || 'Hi {{customer_name}}! 👋';
+            const rawIntro = waCfg.intro || 'Your payment has been verified successfully. Thank you for choosing {{company_name}}!';
+            const resolvedGreeting = applyPlaceholders(rawGreeting);
+            const resolvedIntro = applyPlaceholders(rawIntro).replace(new RegExp(brandName, 'g'), `*${brandName}*`);
+
+            let fields = [];
+            if (waCfg.showReceiptNo !== false) fields.push(`🧾 *Receipt No:* ${receiptNumber}`);
+            if (waCfg.showOrderId !== false) fields.push(`📄 *Order ID:* #${session.orderId}`);
+            if (waCfg.showAmount !== false) fields.push(`💰 *Amount Paid:* ₹${displayAmount}`);
+            if (waCfg.showMethod !== false) fields.push(`💳 *Payment Method:* ${methodStr}`);
+            if (waCfg.showUtr !== false) fields.push(`🔖 *Reference / UTR:* ${utrVal}`);
+
+            let waMessage = `✅ *Payment Successful!*\n\n${resolvedGreeting}\n\n${resolvedIntro}\n`;
+            if (fields.length > 0) {
+              waMessage += `\n━━━━━━━━━━━━━━━━━━\n${fields.join('\n')}\n━━━━━━━━━━━━━━━━━━\n`;
+            }
+            waMessage += `\n📄 *Your official PDF payment receipt is attached to this message.*\n`;
+            // The official receipt is sent as a PDF document attachment.
+            if (waCfg.supportText) {
+              waMessage += `\n${applyPlaceholders(waCfg.supportText)}\n`;
+            }
+            if (waCfg.footerNote) {
+              waMessage += `\n${applyPlaceholders(waCfg.footerNote)}\n*${brandName}*`;
+            }
+
+            // Dispatch PDF as actual WhatsApp document attachment
+            const pdfDocFileName = `PayNova_Receipt_${receiptNumber}.pdf`;
+            if (!pdfBuffer) {
+              console.warn('[payment-api] WhatsApp receipt skipped: PDF generation returned no buffer.');
+              return;
+            }
+            whatsappBerryService.sendDocument(waNumber, pdfBuffer, pdfDocFileName, waMessage.trim()).then(res => {
+              if (res?.success) {
+                console.log(`[payment-api] Official PayNova PDF receipt document delivered to ${waNumber} (ID: ${res.id})`);
+              }
+            }).catch(err => {
+              console.warn('[payment-api] WhatsApp document receipt dispatch error:', err.message);
+              // Do not substitute a link/text receipt for the requested PDF.
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('[payment-api] Error preparing confirmation messages & PDF receipt:', err.message);
+      }
     }
   });
 

@@ -1,6 +1,6 @@
 # ARCHITECTURE.md — Canonical System Architecture & Engineering Blueprint
 
-> **YOUPI PG V2**  
+> **PayNova (PayNova PG)**  
 > *Sovereign • Self-Hosted • Zero-Fee • Deterministic UPI Payment Gateway Suite*  
 > **Architecture Reference:** Production Specification V2  
 > **Runtime Target:** Node.js `>= 20.0.0` (ESM Native) • SQLite WAL • Android Kotlin
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary & Mission Statement
 
-**YOUPI PG** is a sovereign, self-hosted, white-label UPI and multi-modal payment gateway engineered for small-scale merchants, digital creators, and independent businesses in India.
+**PayNova** is a sovereign, self-hosted, white-label UPI and multi-modal payment gateway engineered for small-scale merchants, digital creators, and independent businesses in India.
 
 ### The Problem It Solves
 Traditional Indian payment aggregators (Razorpay, Cashfree, PayU, Paytm) impose:

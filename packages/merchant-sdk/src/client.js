@@ -129,3 +129,7 @@ export class YoupiPaymentClient {
     return JSON.parse(rawPayloadString);
   }
 }
+
+export const PayNovaClient = YoupiPaymentClient;
+export const AstraPayClient = YoupiPaymentClient;
+export const HackastraPaymentClient = YoupiPaymentClient;

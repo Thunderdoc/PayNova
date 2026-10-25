@@ -1,0 +1,74 @@
+# Production Caddyfile for PayNova Payment Gateway
+# Fully automated TLS (Let's Encrypt), HTTP/2, Brotli/Gzip compression, reverse proxy
+
+# Set your production domain below (e.g. gateway.paynova.in or pay.paynova.in)
+{$GATEWAY_DOMAIN:localhost} {
+    # Automatic HTTPS redirection & HSTS
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Enable native Gzip and Zstandard compression
+    encode gzip zstd
+
+    # Route 1: Checkout Portal & PayNova Embed SDK (Port 7000)
+    handle /checkout* {
+        reverse_proxy 127.0.0.1:7000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    handle /paynova.js {
+        reverse_proxy 127.0.0.1:7000
+    }
+
+    handle /astrapay.js {
+        reverse_proxy 127.0.0.1:7000
+    }
+
+    handle /hackastra.js {
+        reverse_proxy 127.0.0.1:7000
+    }
+
+    handle /youpi.js {
+        reverse_proxy 127.0.0.1:7000
+    }
+
+    handle /icons/* {
+        reverse_proxy 127.0.0.1:7000
+    }
+
+    # Route 2: Core Payment API Engine (Port 6100)
+    handle /api/* {
+        reverse_proxy 127.0.0.1:6100 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+            # Maintain active Server-Sent Events (SSE) connections without timeout
+            flush_interval -1
+        }
+    }
+
+    # Route 3: Merchant Admin Dashboard (Port 6001)
+    handle /admin* {
+        reverse_proxy 127.0.0.1:6001 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+            flush_interval -1
+        }
+    }
+
+    # Fallback to Checkout Portal
+    handle {
+        reverse_proxy 127.0.0.1:7000
+    }
+}

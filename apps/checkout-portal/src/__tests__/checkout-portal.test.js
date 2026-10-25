@@ -87,10 +87,12 @@ describe('Checkout Portal Integration Tests', () => {
 
     test('GET /checkout/:id/qr.svg returns dynamic SVG image', async () => {
       const res = await get('/checkout/pay_test_uuid_12345/qr.svg');
-      assert.equal(res.status, 200);
-      assert.ok(res.headers['content-type'].includes('image/svg+xml'));
-      assert.ok(res.text.includes('<svg'));
-      assert.ok(res.text.includes('</svg>'));
+      // A QR must never be generated without an authoritative receiving
+      // account and amount. The test payment has no backend state, so the
+      // honest response is an unavailable QR rather than a fake QR.
+      assert.equal(res.status, 409);
+      assert.ok(res.headers['content-type'].includes('application/json'));
+      assert.match(res.text, /QR is unavailable/);
     });
 
     test('GET /icons/:filename returns official Play Store icons with correct MIME type', async () => {
@@ -139,9 +141,19 @@ describe('Checkout Portal Integration Tests', () => {
       assert.ok(res.text.includes('/icons/gpay.png'));
       assert.ok(res.text.includes('/icons/phonepe.png'));
       assert.ok(res.text.includes('/icons/paytm.png'));
+      assert.ok(res.text.includes('UPI Link Payment'));
+      assert.ok(res.text.includes('Cash Counter'));
+      assert.ok(res.text.includes('Cash on Delivery'));
+      assert.equal(res.text.includes('Card at Counter'), false);
 
       // INVARIANT: Raw Payee VPA / UPI ID row is REMOVED from Order Summary
       assert.equal(res.text.includes('id="drawerVpa"'), false);
+
+      // Template tokens must never be exposed to customers when optional order
+      // and support fields are absent from the payment state.
+      for (const token of ['{{ITEM_NAME}}', '{{ITEM_VARIANT}}', '{{ITEM_QUANTITY}}', '{{SUPPORT_EMAIL}}', '{{SUPPORT_PHONE}}', '{{WEBSITE_URL}}']) {
+        assert.equal(res.text.includes(token), false, `unresolved checkout template token: ${token}`);
+      }
     });
   });
 });

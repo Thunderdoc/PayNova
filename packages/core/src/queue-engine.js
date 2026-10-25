@@ -17,6 +17,45 @@ export class QueueEngine {
   }
 
   /**
+   * Smart Dynamic VPA Pool Selector:
+   * Selects the optimal receiving account among multiple active accounts for a merchant:
+   * 1. Prefers completely idle account (slot not busy).
+   * 2. If all busy, picks the account with the shortest waiting queue.
+   * @param {string} merchantId
+   * @returns {any | null}
+   */
+  selectOptimalAccount(merchantId) {
+    if (!this.accountRepo) return null;
+    const accounts = this.accountRepo.findByMerchantId
+      ? this.accountRepo.findByMerchantId(merchantId).filter(a => a.isActive)
+      : [];
+    if (!accounts || accounts.length === 0) {
+      return this.accountRepo.findActiveForMerchant(merchantId);
+    }
+    if (accounts.length === 1) return accounts[0];
+
+    // Check for an account that has a free slot
+    for (const acc of accounts) {
+      const active = this.sessionRepo.findCurrentActiveOrProcessing(acc.id);
+      if (!active) {
+        return acc; // Instant slot acquisition without queue
+      }
+    }
+
+    // All accounts busy: pick account with lowest queue depth
+    let bestAcc = accounts[0];
+    let minQueue = Infinity;
+    for (const acc of accounts) {
+      const depth = this.sessionRepo.getQueueDepth ? this.sessionRepo.getQueueDepth(acc.id) : 0;
+      if (depth < minQueue) {
+        minQueue = depth;
+        bestAcc = acc;
+      }
+    }
+    return bestAcc;
+  }
+
+  /**
    * Attempts to acquire an active slot or places the session into the queue.
    * @param {string} sessionId
    * @param {string} receivingAccountId

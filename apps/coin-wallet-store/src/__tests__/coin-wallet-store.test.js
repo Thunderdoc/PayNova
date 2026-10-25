@@ -275,39 +275,17 @@ describe('Coin Top-Up Wallet Demo Store Integration Tests', () => {
     assert.ok(res.body.includes('Try Again'));
   });
 
-  test('POST /api/verify-payment credits coins directly from popup drawer and prevents duplicates', async () => {
-    const initialCoins = storeInstance.server.walletCoins;
-    const orderId = `COIN-ORD-POPUP-${Date.now()}`;
-
-    // 1. Initial verification call
+  test('POST /api/verify-payment rejects client-side fulfillment attempts', async () => {
     const verifyRes = await request('/api/verify-payment', {
       method: 'POST',
       body: {
-        orderId,
+        orderId: `COIN-ORD-UNTRUSTED-${Date.now()}`,
         coins: 100,
         packName: 'Starter Pack'
       }
     });
-
-    assert.equal(verifyRes.status, 200);
-    assert.equal(verifyRes.body.success, true);
-    assert.equal(verifyRes.body.coins, initialCoins + 100);
-    assert.equal(storeInstance.server.walletCoins, initialCoins + 100);
-
-    // 2. Duplicate call must be idempotent
-    const dupRes = await request('/api/verify-payment', {
-      method: 'POST',
-      body: {
-        orderId,
-        coins: 100,
-        packName: 'Starter Pack'
-      }
-    });
-
-    assert.equal(dupRes.status, 200);
-    assert.equal(dupRes.body.success, true);
-    assert.equal(dupRes.body.message, 'Already credited');
-    assert.equal(storeInstance.server.walletCoins, initialCoins + 100);
+    assert.equal(verifyRes.status, 410);
+    assert.equal(verifyRes.body.success, false);
   });
 
   test('GET /order-success renders verified payment page with parameters', async () => {
@@ -317,7 +295,7 @@ describe('Coin Top-Up Wallet Demo Store Integration Tests', () => {
     assert.ok(res.body.includes('ORD-SUCC-123'));
     assert.ok(res.body.includes('499.00'));
     assert.ok(res.body.includes('998877665544'));
-    assert.ok(res.body.includes('VERIFIED BY YOUPI PG'));
+    assert.ok(res.body.includes('VERIFIED BY PAYNOVA'));
   });
 
   test('GET /order-suspicious renders held for review security notice', async () => {

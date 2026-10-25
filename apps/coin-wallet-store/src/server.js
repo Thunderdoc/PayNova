@@ -380,7 +380,7 @@ export class CoinWalletStoreServer {
         return;
       }
 
-      // POST /api/verify-payment (Instant confirmation & credit from popup drawer handler)
+      // Browser events are informational only. Fulfillment is webhook-only.
       if (pathname === '/api/verify-payment' && method === 'POST') {
         let body = '';
         req.on('data', chunk => { body += chunk; });
@@ -395,6 +395,14 @@ export class CoinWalletStoreServer {
               return;
             }
 
+            res.writeHead(410, {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            });
+            res.end(JSON.stringify({ success: false, error: 'Client-side confirmation disabled; await signed webhook.' }));
+            return;
+
+            /* Legacy client-side credit path intentionally disabled.
             // Check if already credited
             const alreadyCredited = this.transactionHistory.some(t => t.orderId === orderId);
             if (alreadyCredited) {
@@ -434,7 +442,7 @@ export class CoinWalletStoreServer {
               coins: this.walletCoins,
               credited: creditedCoins,
               packName: finalPackName
-            }));
+            })); */
           } catch (err) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: err.message }));

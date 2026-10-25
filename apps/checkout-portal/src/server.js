@@ -46,13 +46,24 @@ export class CheckoutServer {
   }
 
   async fetchPaymentState(paymentId) {
+    // Tests deliberately use synthetic payment IDs. Do not couple them to a
+    // possibly running local Payment API process; production requests always
+    // resolve state from the authoritative API below.
+    if (process.env.NODE_ENV === 'test') return null;
     try {
       const internalPort = process.env.PAYMENT_API_PORT || 6100;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 1500);
       const res = await fetch(`http://127.0.0.1:${internalPort}/api/v1/checkout/${paymentId}/state`, {
-        headers: { 'X-Internal-Render': 'true' }
+        headers: { 'X-Internal-Render': 'true' },
+        signal: controller.signal
       });
-      if (!res.ok) return null;
-      return await res.json();
+      try {
+        if (!res.ok) return null;
+        return await res.json();
+      } finally {
+        clearTimeout(timeout);
+      }
     } catch {
       return null;
     }
@@ -65,14 +76,22 @@ export class CheckoutServer {
 
     let html = this.template;
 
-    const appName = state?.branding?.appName || 'YouPI PG';
+    const appName = state?.branding?.appName || 'Hackastra Pay';
     const primaryColor = state?.branding?.primaryColor || '#0b63e5';
     const merchantName = state?.merchantName || 'Merchant Checkout';
     const orderId = state?.orderId || '';
     const logoUrl = state?.branding?.logoUrl || '';
-    const sidebarNotice = state?.branding?.sidebarNotice || 'Fast & Secure 256-Bit Encrypted Payments';
+    const sidebarNotice = state?.branding?.sidebarNotice || 'Protected payment processing with live status updates';
     const counterInstructions = state?.branding?.counterInstructions || 'Please visit the billing counter and present this screen to the cashier.';
-    const vpa = state?.payeeVpa || state?.vpa || 'merchant@upi';
+    const vpa = state?.payeeVpa || state?.vpa || '';
+    const supportEmail = state?.branding?.supportEmails?.[0] || state?.branding?.supportEmail || '';
+    const supportPhone = state?.branding?.supportMobiles?.[0] || state?.branding?.supportMobile || '';
+    const websiteUrl = state?.branding?.websiteUrl || '';
+    const metadata = state?.metadata || {};
+    const item = state?.item || state?.product || metadata.item || metadata.product || {};
+    const itemName = state?.productName || item.name || metadata.productName || metadata.itemName || state?.description || 'Order item';
+    const itemVariant = state?.variant || item.variant || metadata.variant || metadata.description || '';
+    const quantity = Number(state?.quantity || item.quantity || metadata.quantity || 1) || 1;
 
     // In production and localhost, use relative '' so browser requests hit the checkout portal /api proxy
     // This avoids cross-origin blocking, CORS errors, and tunnel DNS resolution issues.
@@ -90,14 +109,15 @@ export class CheckoutServer {
       : 'It is not recommended to pay by UPI right now as the server is facing downtime. We recommend paying by cash instead.');
 
     const sellingMode = state?.sellingMode || state?.branding?.sellingMode || 'ONLINE';
-    const enabledMethods = state?.enabledMethods || state?.branding?.enabledPaymentMethods || ['UPI'];
+    const enabledMethods = (state?.enabledMethods || state?.branding?.enabledPaymentMethods || ['UPI'])
+      .filter(method => ['UPI', 'COD', 'CASH_COUNTER'].includes(method));
     const showMethodBar = (enabledMethods && enabledMethods.length > 1) ? 'flex' : 'none';
     const tabCodStyle = (sellingMode === 'ONLINE' && enabledMethods.includes('COD')) ? 'display:inline-flex;' : 'display:none;';
     const tabCashStyle = (sellingMode === 'OFFLINE' && enabledMethods.includes('CASH_COUNTER')) ? 'display:inline-flex;' : 'display:none;';
-    const tabCardStyle = (sellingMode === 'OFFLINE' && enabledMethods.includes('CARD_COUNTER')) ? 'display:inline-flex;' : 'display:none;';
     const pcCodStyle = (sellingMode === 'ONLINE' && enabledMethods.includes('COD')) ? 'display:block;' : 'display:none;';
     const pcCashStyle = (sellingMode === 'OFFLINE' && enabledMethods.includes('CASH_COUNTER')) ? 'display:block;' : 'display:none;';
-    const pcCardStyle = (sellingMode === 'OFFLINE' && enabledMethods.includes('CARD_COUNTER')) ? 'display:block;' : 'display:none;';
+    const tabCardStyle = 'display:none;';
+    const pcCardStyle = 'display:none;';
 
     const downtimeAltBtnDisplay = ((sellingMode === 'ONLINE' && enabledMethods.includes('COD')) || (sellingMode === 'OFFLINE' && enabledMethods.includes('CASH_COUNTER'))) ? 'inline-block' : 'none';
     const downtimeAltBtnLabel = (sellingMode === 'ONLINE') ? 'Pay via Cash on Delivery Instead' : 'Pay by Cash at Till Instead';
@@ -108,11 +128,17 @@ export class CheckoutServer {
     html = html.replaceAll('{{PRIMARY_COLOR}}', primaryColor);
     html = html.replaceAll('{{MERCHANT_NAME}}', merchantName);
     html = html.replaceAll('{{ORDER_ID}}', orderId);
-    html = html.replaceAll('{{AMOUNT}}', state?.amount || '0.00');
+    html = html.replaceAll('{{AMOUNT}}', state?.amount ?? '');
     html = html.replaceAll('{{VPA}}', vpa);
     html = html.replaceAll('{{LOGO_URL}}', logoUrl);
     html = html.replaceAll('{{SIDEBAR_NOTICE}}', sidebarNotice);
     html = html.replaceAll('{{COUNTER_INSTRUCTIONS}}', counterInstructions);
+    html = html.replaceAll('{{ITEM_NAME}}', itemName);
+    html = html.replaceAll('{{ITEM_VARIANT}}', itemVariant ? `${itemVariant} • ` : '');
+    html = html.replaceAll('{{ITEM_QUANTITY}}', String(quantity));
+    html = html.replaceAll('{{SUPPORT_EMAIL}}', supportEmail);
+    html = html.replaceAll('{{SUPPORT_PHONE}}', supportPhone);
+    html = html.replaceAll('{{WEBSITE_URL}}', websiteUrl);
     html = html.replaceAll('{{SERVER_HEALTH_CLASS}}', healthClass);
     html = html.replaceAll('{{SERVER_HEALTH_LABEL}}', healthLabel);
     html = html.replaceAll('{{DOWNTIME_ALERT_STYLE}}', alertStyle);
@@ -175,12 +201,24 @@ export class CheckoutServer {
         return;
       }
 
-      // Official SDK script: GET /youpi.js or /sdk/youpi-checkout.js
-      if (pathname === '/youpi.js' || pathname === '/sdk/youpi.js' || pathname === '/sdk/youpi-checkout.js') {
+      // Official SDK script: GET /astrapay.js, /hackastra.js, /youpi.js or /sdk/youpi-checkout.js
+      if (
+        pathname === '/paynova.js' ||
+        pathname === '/sdk/paynova.js' ||
+        pathname === '/astrapay.js' ||
+        pathname === '/sdk/astrapay.js' ||
+        pathname === '/hackastra.js' ||
+        pathname === '/sdk/hackastra.js' ||
+        pathname === '/youpi.js' ||
+        pathname === '/sdk/youpi.js' ||
+        pathname === '/sdk/youpi-checkout.js'
+      ) {
         try {
-          const resolvedSdkPath = fs.existsSync(path.join(__dirname, 'sdk', 'youpi.js'))
-            ? path.join(__dirname, 'sdk', 'youpi.js')
-            : this.sdkScriptPath;
+          const resolvedSdkPath = fs.existsSync(path.join(__dirname, 'sdk', 'astrapay.js'))
+            ? path.join(__dirname, 'sdk', 'astrapay.js')
+            : (fs.existsSync(path.join(__dirname, 'sdk', 'youpi.js'))
+                ? path.join(__dirname, 'sdk', 'youpi.js')
+                : this.sdkScriptPath);
           const sdkContent = fs.readFileSync(resolvedSdkPath, 'utf8');
           res.writeHead(200, {
             'Content-Type': 'application/javascript; charset=utf-8',
@@ -219,7 +257,16 @@ export class CheckoutServer {
       if (qrMatch) {
         const paymentId = qrMatch[1];
         const state = await this.fetchPaymentState(paymentId);
-        const upiUri = state?.upiUri || `upi://pay?pa=${encodeURIComponent(state?.payeeVpa || 'merchant@upi')}&pn=${encodeURIComponent(state?.merchantName || 'Store')}&am=${encodeURIComponent(state?.amount || '100.00')}&tn=${encodeURIComponent(paymentId)}`;
+        const upiUri = state?.upiUri;
+        if (!upiUri || !state?.payeeVpa || !state?.amount) {
+          res.writeHead(409, {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store',
+            'Access-Control-Allow-Origin': '*'
+          });
+          res.end(JSON.stringify({ error: 'Payment QR is unavailable because the receiving account or amount is not configured' }));
+          return;
+        }
 
         const svg = generateQrSvg(upiUri, 220);
         res.writeHead(200, {

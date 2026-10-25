@@ -29,13 +29,14 @@ const testFiles = [
   'apps/payment-api/src/__tests__/upi-server-health-and-pc-ui.test.js',
   'apps/payment-api/src/__tests__/whatsapp-berry-auth.test.js',
   'apps/payment-api/src/__tests__/whitelabel-branding.test.js',
+  'apps/payment-api/src/__tests__/receipt-system.test.js',
   'apps/payment-api/src/__tests__/cod-parallel-timer-decoupling.test.js',
   'scripts/chaos-concurrency.test.js',
   'scripts/production-infrastructure.test.js'
 ];
 
 console.log('============================================================');
-console.log('🧪 YOUPI PG V2 — FULL REGRESSION TEST RUNNER');
+console.log('🧪 PAYNOVA PG — FULL REGRESSION TEST RUNNER');
 console.log(`Running ${testFiles.length} curated test suites...`);
 console.log('============================================================\n');
 

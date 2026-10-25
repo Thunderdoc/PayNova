@@ -738,10 +738,10 @@
     }
   }
 
-  // Auto-bind click listener for all [data-youpi-pay] buttons on page
+  // Auto-bind click listener for all [data-astrapay-pay], [data-hackastra-pay] and [data-youpi-pay] buttons on page
   if (isBrowser) {
     document.addEventListener('click', function (e) {
-      const btn = e.target && e.target.closest && e.target.closest('[data-youpi-pay]');
+      const btn = e.target && e.target.closest && e.target.closest('[data-astrapay-pay], [data-hackastra-pay], [data-youpi-pay]');
       if (btn) {
         e.preventDefault();
         YoupiCheckout.handleButtonClick(btn);
@@ -749,11 +749,18 @@
     });
   }
 
-  // Export globals
+  // Export globals: AstraPay, Hackastra, and backwards-compatible Youpi
+  globalScope.AstraPay = YoupiCheckout;
+  globalScope.Hackastra = YoupiCheckout;
+  globalScope.HackastraPay = YoupiCheckout;
   globalScope.YoupiCheckout = YoupiCheckout;
   globalScope.Youpi = YoupiCheckout;
+
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = YoupiCheckout;
+    module.exports.AstraPay = YoupiCheckout;
+    module.exports.Hackastra = YoupiCheckout;
+    module.exports.HackastraPay = YoupiCheckout;
     module.exports.YoupiCheckout = YoupiCheckout;
     module.exports.Youpi = YoupiCheckout;
   }

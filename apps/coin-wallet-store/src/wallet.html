@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Customer Account · YOUPI Store</title>
+  <title>Customer Account · PAYNOVA Store</title>
   <style>
     :root {
       --bg: #090d16;
@@ -154,7 +154,7 @@
 <header>
   <a href="/" class="brand">
     <span class="brand-icon">⚡</span>
-    <span>YOUPI Store</span>
+    <span>PAYNOVA Store</span>
   </a>
   <a href="/" class="btn btn-buy" style="padding:0.45rem 1rem; font-size:0.85rem; text-decoration:none;">
     ← Back to Store
@@ -312,20 +312,11 @@
             checkoutUrl: data.checkoutUrl,
             order_id: data.orderId,
             amount: price,
-            name: 'YOUPI Store',
+            name: 'PAYNOVA Store',
             description: `${packName}`,
             handler: async function(paymentResponse) {
-              // Direct instant credit
-              await fetch('/api/verify-payment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  paymentId: paymentResponse.utr || paymentResponse.paymentId || data.paymentId,
-                  orderId: data.orderId,
-                  coins: coins,
-                  packName: packName
-                })
-              });
+              // Browser callbacks are not proof of payment. The wallet is
+              // credited only after the signed server-to-server webhook.
               document.getElementById('successBanner').hidden = false;
               loadWallet();
             }

@@ -9,7 +9,7 @@ import android.util.Log
 /**
  * BroadcastReceiver listening for incoming SMS on the Android device.
  * Automatically extracts the bank SMS body, sender, and timestamp,
- * and securely forwards it to the paired YouPI PG Merchant Gateway.
+ * and securely forwards it to the paired Hackastra Pay Gateway.
  */
 class SmsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -28,11 +28,18 @@ class SmsReceiver : BroadcastReceiver() {
                 val body = sms.messageBody ?: ""
                 val timestamp = sms.timestampMillis
 
-                Log.d("SmsReceiver", "Captured incoming bank SMS from $sender: length=${body.length}")
+                val parsed = NotificationParser.parse(
+                    packageName = "android.sms",
+                    title = sender,
+                    text = body,
+                    postTime = timestamp
+                ) ?: continue
+
+                Log.d("SmsReceiver", "Captured structured bank credit from $sender: ₹${parsed.amountRupees}")
 
                 Thread {
-                    val success = apiClient.sendSms(sender, body, timestamp)
-                    Log.d("SmsReceiver", "Dispatched SMS to YouPI Gateway: success=$success")
+                    val success = apiClient.sendObservation(parsed)
+                    Log.d("SmsReceiver", "Dispatched payment observation to Hackastra Pay: success=$success")
                 }.start()
             }
         }

@@ -1,8 +1,8 @@
 {
-  "name": "youpi-pg",
+  "name": "paynova-pg",
   "version": "1.0.0",
   "type": "module",
-  "description": "Self-Hosted White-Label UPI Payment Gateway with Payment Observation Engine",
+  "description": "PayNova Sovereign Self-Hosted UPI Payment Gateway",
   "private": true,
   "workspaces": [
     "packages/*",
@@ -29,6 +29,6 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "author": "Antigravity Systems",
-  "license": "Commercial"
+  "author": "PayNova",
+  "license": "Proprietary"
 }

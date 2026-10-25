@@ -2,7 +2,7 @@ package com.youpi.observer
 
 import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKeys
+import androidx.security.crypto.MasterKey
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -19,11 +19,13 @@ class ApiClient(private val context: Context) {
         .readTimeout(15, TimeUnit.SECONDS)
         .build()
 
-    private val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+    private val masterKey = MasterKey.Builder(context)
+        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+        .build()
     private val prefs = EncryptedSharedPreferences.create(
-        "youpi_observer_secure_prefs",
-        masterKeyAlias,
         context,
+        "youpi_observer_secure_prefs",
+        masterKey,
         EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
@@ -33,7 +35,7 @@ class ApiClient(private val context: Context) {
     }
 
     fun getBaseUrl(): String {
-        return prefs.getString("base_url", "http://10.0.2.2:6100") ?: "http://10.0.2.2:6100"
+        return prefs.getString("base_url", "") ?: ""
     }
 
     fun pair(baseUrl: String, enrollmentToken: String, deviceName: String): Boolean {
@@ -97,8 +99,8 @@ class ApiClient(private val context: Context) {
             put("amountPaise", parsed.amountPaise)
             put("amount", parsed.amountRupees)
             put("observedAt", parsed.timestamp)
-            put("bankReferenceNumber", parsed.bankReferenceNumber)
-            put("senderVpa", parsed.senderVpa)
+            put("bankReferenceNumber", parsed.bankReferenceNumber ?: JSONObject.NULL)
+            put("senderVpa", parsed.senderVpa ?: JSONObject.NULL)
             put("rawNotification", rawNotification)
         }
 

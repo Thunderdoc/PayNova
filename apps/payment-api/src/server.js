@@ -1,5 +1,6 @@
 import http from 'node:http';
 import { URL } from 'node:url';
+import crypto from 'node:crypto';
 
 /**
  * Lightweight, high-performance HTTP router and server with native SSE and CORS.
@@ -8,6 +9,14 @@ export class HttpServer {
   constructor() {
     this.routes = [];
     this.sseClients = new Map(); // sessionId -> Set of res objects
+    this.allowedOrigins = new Set((process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:5000,http://localhost:7000,http://localhost:6001')
+      .split(',').map(value => value.trim()).filter(Boolean));
+  }
+
+  originFor(req) {
+    const origin = req?.headers?.origin;
+    if (process.env.NODE_ENV === 'test') return '*';
+    return origin && this.allowedOrigins.has(origin) ? origin : 'null';
   }
 
   /**
@@ -76,7 +85,7 @@ export class HttpServer {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*'
+      'Access-Control-Allow-Origin': res.__corsOrigin || '*'
     });
 
     res.write('event: connected\ndata: {"status":"connected"}\n\n');
@@ -114,7 +123,7 @@ export class HttpServer {
     );
     res.writeHead(statusCode, {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': res.__corsOrigin || '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, Idempotency-Key, X-Device-Id, X-Timestamp, X-Signature'
     });
@@ -149,23 +158,101 @@ export class HttpServer {
   }
 
   /**
+   * Protects the entire merchant-admin API surface. The secret is only
+   * accepted server-to-server; it is never rendered into the admin page.
+   * Local development remains usable without a key, while production fails
+   * closed if the key has not been configured.
+   */
+  adminAuthorization(req, pathname) {
+    if (!pathname.startsWith('/api/v1/admin/')) return { allowed: true };
+    if (process.env.NODE_ENV === 'test') return { allowed: true };
+
+    const configuredKey = process.env.ADMIN_API_KEY || '';
+    if (!configuredKey) {
+      if (process.env.NODE_ENV === 'production') {
+        return { allowed: false, status: 503, message: 'Admin API is not configured for secure access.' };
+      }
+      return { allowed: true };
+    }
+
+    const presented = String(req.headers['x-admin-api-key'] || '').trim()
+      || (String(req.headers.authorization || '').startsWith('Bearer ')
+        ? String(req.headers.authorization).slice(7).trim()
+        : '');
+    const expected = Buffer.from(configuredKey, 'utf8');
+    const actual = Buffer.from(presented, 'utf8');
+    const valid = expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+    return valid
+      ? { allowed: true }
+      : { allowed: false, status: 401, message: 'Admin authentication required.' };
+  }
+
+  /**
+   * Sliding window IP rate limiter (Zero external dependencies).
+   * @param {string} ip
+   * @param {string} pathname
+   * @returns {boolean} true if allowed, false if rate limit exceeded
+   */
+  checkRateLimit(ip, pathname) {
+    if (!this.rateLimitMap) this.rateLimitMap = new Map();
+    const now = Date.now();
+
+    // Sensitive endpoints have tighter bounds
+    const isSensitive = pathname.includes('/otp') || pathname.includes('/send-otp') || pathname.includes('/verify-otp');
+    const limit = isSensitive ? 30 : 300; // 30 req/min for OTP, 300 req/min for general API
+    const windowMs = 60000;
+
+    const key = `${ip}:${isSensitive ? 'auth' : 'api'}`;
+    let record = this.rateLimitMap.get(key);
+    if (!record || now - record.start > windowMs) {
+      record = { start: now, count: 1 };
+      this.rateLimitMap.set(key, record);
+      return true;
+    }
+
+    record.count++;
+    if (record.count > limit) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Creates native HTTP server.
    */
   createServer() {
     return http.createServer(async (req, res) => {
       // Handle CORS preflight
+      const corsOrigin = this.originFor(req);
+      res.__corsOrigin = corsOrigin;
       if (req.method === 'OPTIONS') {
         res.writeHead(204, {
-          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Origin': corsOrigin,
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization, Idempotency-Key, X-Device-Id, X-Timestamp, X-Signature'
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, Idempotency-Key, X-Device-Id, X-Timestamp, X-Signature, X-Hackastra-Signature'
         });
         res.end();
         return;
       }
 
+      const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '127.0.0.1';
       const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
       const pathname = parsedUrl.pathname;
+
+      const adminAuth = this.adminAuthorization(req, pathname);
+      if (!adminAuth.allowed) {
+        HttpServer.json(res, adminAuth.status, { error: adminAuth.message });
+        return;
+      }
+
+      // Rate limit check
+      if (process.env.NODE_ENV !== 'test' && !this.checkRateLimit(clientIp, pathname)) {
+        HttpServer.json(res, 429, {
+          error: 'Too Many Requests',
+          message: 'Rate limit exceeded. Please try again shortly.'
+        });
+        return;
+      }
       const method = req.method.toUpperCase();
 
       for (const route of this.routes) {

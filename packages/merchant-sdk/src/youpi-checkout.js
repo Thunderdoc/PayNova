@@ -732,11 +732,21 @@
   }
 
   // Export globals
+  globalScope.PayNova = YoupiCheckout;
+  globalScope.PayNovaCheckout = YoupiCheckout;
+  globalScope.AstraPay = YoupiCheckout;
+  globalScope.Hackastra = YoupiCheckout;
+  globalScope.HackastraPay = YoupiCheckout;
   globalScope.YoupiCheckout = YoupiCheckout;
   globalScope.Youpi = YoupiCheckout;
 })(typeof window !== 'undefined' ? window : globalThis);
 
 const _exportedCheckout = (typeof window !== 'undefined' ? window : globalThis).YoupiCheckout;
+export const PayNova = _exportedCheckout;
+export const PayNovaCheckout = _exportedCheckout;
+export const AstraPay = _exportedCheckout;
+export const Hackastra = _exportedCheckout;
+export const HackastraPay = _exportedCheckout;
 export const YoupiCheckout = _exportedCheckout;
 export const Youpi = _exportedCheckout;
 export default _exportedCheckout;

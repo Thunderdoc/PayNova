@@ -1,4 +1,5 @@
 import http from 'node:http';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -43,8 +44,20 @@ export class AdminServer {
     // This completely eliminates CORS errors, tunnel downtime 530s, and cross-origin failures.
     const clientApiBase = '';
     html = html.replaceAll('{{API_BASE_URL}}', clientApiBase);
-    html = html.replaceAll('{{ANDROID_ENROLLMENT_SECRET}}', process.env.ANDROID_ENROLLMENT_SECRET || 'android_pairing_enrollment_secret_key_32_chars');
     return html;
+  }
+
+  isAdminRequestAuthorized(req) {
+    if (process.env.NODE_ENV === 'test') return true;
+    const configured = String(process.env.ADMIN_API_KEY || '');
+    if (!configured) return process.env.NODE_ENV !== 'production';
+    const provided = String(req.headers['x-admin-api-key'] || '').trim()
+      || (String(req.headers.authorization || '').startsWith('Bearer ')
+        ? String(req.headers.authorization).slice(7).trim()
+        : '');
+    const expected = Buffer.from(configured, 'utf8');
+    const actual = Buffer.from(provided, 'utf8');
+    return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
   }
 
   createServer() {
@@ -71,6 +84,11 @@ export class AdminServer {
 
       // Admin Tickets API: GET /api/admin/tickets
       if (pathname === '/api/admin/tickets') {
+        if (!this.isAdminRequestAuthorized(req)) {
+          res.writeHead(process.env.ADMIN_API_KEY ? 401 : 503, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: process.env.ADMIN_API_KEY ? 'Admin authentication required.' : 'Admin API is not configured for secure access.' }));
+          return;
+        }
         const merchants = this.merchantRepo.findAll();
         const mId = merchants[0]?.id || '00000000-0000-0000-0000-000000000001';
         const tickets = this.ticketRepo.findTicketsByMerchant(mId);
@@ -124,6 +142,7 @@ export class AdminServer {
           method: req.method,
           headers: {
             ...req.headers,
+            ...(process.env.ADMIN_API_KEY ? { 'x-admin-api-key': process.env.ADMIN_API_KEY } : {}),
             'x-merchant-id': req.headers['x-merchant-id'] || defaultMerchantId,
             host: `localhost:${targetPort}`,
             'x-forwarded-host': req.headers.host || '',
@@ -147,6 +166,11 @@ export class AdminServer {
 
       // Download Android Companion APK
       if (pathname === '/youpi-sms-gateway.apk' || pathname === '/api/v1/admin/sms-gateway/download-apk') {
+        if (pathname.startsWith('/api/') && !this.isAdminRequestAuthorized(req)) {
+          res.writeHead(process.env.ADMIN_API_KEY ? 401 : 503, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: process.env.ADMIN_API_KEY ? 'Admin authentication required.' : 'Admin API is not configured for secure access.' }));
+          return;
+        }
         const apkCandidates = [
           path.resolve(__dirname, '../public/youpi-sms-gateway.apk'),
           path.resolve(__dirname, '../../payment-api/public/youpi-sms-gateway.apk'),

@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # 1. Core Payment API Engine
+  payment-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: paynova-payment-api
+    restart: unless-stopped
+    ports:
+      - "6100:6100"
+    environment:
+      - PORT=6100
+      - NODE_ENV=production
+      - YOUPI_MODE=localhost
+      - BASE_PAYMENT_API_URL=http://localhost:6100
+      - BASE_CHECKOUT_URL=http://localhost:7000
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:6100/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # 2. Checkout Portal & Universal JS SDK
+  checkout-portal:
+    build:
+      context: .
+      dockerfile: Dockerfile.checkout
+    container_name: paynova-checkout-portal
+    restart: unless-stopped
+    ports:
+      - "7000:7000"
+    environment:
+      - PORT=7000
+      - NODE_ENV=production
+      - BASE_PAYMENT_API_URL=http://payment-api:6100
+    depends_on:
+      - payment-api
+
+  # 3. Merchant Supervisor Admin & Soundbox
+  merchant-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
+    container_name: paynova-merchant-admin
+    restart: unless-stopped
+    ports:
+      - "6001:6001"
+    environment:
+      - PORT=6001
+      - NODE_ENV=production
+      - BASE_PAYMENT_API_URL=http://payment-api:6100
+    depends_on:
+      - payment-api

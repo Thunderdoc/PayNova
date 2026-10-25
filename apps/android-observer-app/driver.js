@@ -55,6 +55,16 @@ export class AndroidObserverDriver {
     return data;
   }
 
+  /** Pair using the same short-lived enrollment payload emitted by Merchant Admin. */
+  async pairFromQr(merchantId = null) {
+    const url = `${this.apiBaseUrl}/api/v1/admin/sms-gateway/pair-qr${merchantId ? `?merchantId=${encodeURIComponent(merchantId)}` : ''}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const payload = data.payload || (data.pairingPayload ? JSON.parse(data.pairingPayload) : null);
+    if (!payload?.enrollmentToken) throw new Error('Pairing QR did not contain a valid short-lived enrollment token');
+    return this.pair(payload.enrollmentToken, payload.merchantId);
+  }
+
   /**
    * Submits a signed payment observation to backend.
    * @param {{

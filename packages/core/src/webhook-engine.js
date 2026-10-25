@@ -51,6 +51,7 @@ export class WebhookEngine {
       'Content-Type': 'application/json',
       'X-Gateway-Event': publicOutcome,
       'X-Gateway-Signature': `sha256=${signature}`,
+      'X-Hackastra-Signature': `sha256=${signature}`,
       'X-Gateway-Delivery-Id': deliveryId,
       'X-Gateway-Timestamp': timestamp
     };

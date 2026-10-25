@@ -38,13 +38,24 @@ Thumbs.db
 *.tmp
 *.temp
 
-# Root Testing Screenshots
-*.png
-*.jpg
-*.jpeg
-*.mp4
-*.webm
-!apps/**
-!packages/**
-!docs/**
-!assets/**
+# Build Tools, SDKs, and Large Binaries
+build-tools/
+bin/*.exe
+bin/*.zip
+*.tsbuildinfo
+
+# Android / Gradle Build Cache & Intermediates
+**/.gradle/
+**/build/
+*.idsig
+*-unsigned.apk
+*-debug.apk
+*-debug.zip
+apps/android-observer-app/*.png
+
+# Root Testing Media
+/*.png
+/*.jpg
+/*.jpeg
+/*.mp4
+/*.webm

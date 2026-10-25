@@ -9,7 +9,7 @@
    ╚═╝    ╚═════╝  ╚═════╝ ╚═╝     ╚═╝    ╚═╝      ╚═════╝ 
 ```
 
-# ⚡ YOUPI PG V2
+# ⚡ PayNova (PayNova PG)
 
 ### The Sovereign, Self-Hosted UPI Payment Gateway for Independent Merchants
 **0% Gateway Fees • Direct-to-Bank Settlement • WhatsApp Pre-Checkout OTP • Bank SMS & Gmail Observers**
@@ -22,14 +22,14 @@
 [![WhatsApp Berry Auth](https://img.shields.io/badge/Auth-WhatsApp%20OTP-25d366?style=for-the-badge&logo=whatsapp&logoColor=white)](#)
 [![SQLite WAL](https://img.shields.io/badge/Database-SQLite%20Native%20WAL-003b57?style=for-the-badge&logo=sqlite&logoColor=white)](#)
 [![Native Android Observer](https://img.shields.io/badge/Android-Kotlin%20Observer%20APK-3ddc84?style=for-the-badge&logo=android&logoColor=white)](#)
-[![Regression Tests](https://img.shields.io/badge/Tests-31%2F31%20Passing%20(100%25)-success?style=for-the-badge&logo=vitest&logoColor=white)](#)
+[![Regression Tests](https://img.shields.io/badge/Tests-32%2F32%20Passing%20(100%25)-success?style=for-the-badge&logo=vitest&logoColor=white)](#)
 [![White Label Ready](https://img.shields.io/badge/Branding-100%25%20White--Label-f59e0b?style=for-the-badge&logo=target&logoColor=white)](#)
 
 <br/>
 
 <p align="center">
   <a href="#-live-product-demos">Live Demos</a> •
-  <a href="#-the-problem-vs-the-youpi-solution">Why YOUPI?</a> •
+  <a href="#-the-problem-vs-the-youpi-solution">Why PayNova?</a> •
   <a href="#-architecture-at-a-glance">Architecture</a> •
   <a href="#-key-features--superpowers">Superpowers</a> •
   <a href="#-quickstart-in-60-seconds">Quickstart</a> •
@@ -47,7 +47,7 @@
 
 ## 🎬 Live Product Demos
 
-See **YOUPI PG V2** live in action across Desktop and Mobile checkout flows:
+See **PayNova** live in action across Desktop and Mobile checkout flows:
 
 | 🖥️ Desktop Modal Flow | 📱 Mobile Drawer & App Switcher |
 | :---: | :---: |
@@ -66,7 +66,7 @@ See **YOUPI PG V2** live in action across Desktop and Mobile checkout flows:
 
 Traditional payment gateways (Razorpay, Cashfree, PayU, Stripe) lock your revenue into high fees, multi-day settlement delays, and sudden compliance freezes:
 
-| Comparison Metric | Traditional Aggregators (Razorpay / Cashfree) | ⚡ YOUPI PG (Self-Hosted Sovereign) |
+| Comparison Metric | Traditional Aggregators (Razorpay / Cashfree) | ⚡ PayNova (Self-Hosted Sovereign) |
 | :--- | :--- | :--- |
 | **Transaction Fee** | **2.0% – 3.0% + 18% GST** per transaction | **0.0% (Zero Fees Forever)** |
 | **Settlement Speed** | **T+2 to T+3 Business Days** (Holdbacks) | **Instant (Direct into your Bank Account)** |
@@ -84,7 +84,7 @@ Traditional payment gateways (Razorpay, Cashfree, PayU, Stripe) lock your revenu
 
 ## 🏗️ Architecture at a Glance
 
-YOUPI PG converts your standard Indian personal or business UPI receiving accounts into an automated, zero-fee payment gateway by coupling **pure vector SVG QR codes** with an **automated multi-channel banking observation mesh**.
+PayNova converts your standard Indian personal or business UPI receiving accounts into an automated, zero-fee payment gateway by coupling **pure vector SVG QR codes** with an **automated multi-channel banking observation mesh**.
 
 ```mermaid
 flowchart LR
@@ -93,7 +93,7 @@ flowchart LR
         Cart[Checkout Button]
     end
 
-    subgraph Gateway["YOUPI Gateway Instance"]
+    subgraph Gateway["PayNova Gateway Instance"]
         AuthGate[WhatsApp Berry Auth<br/>6-Digit OTP]
         Queue[Single-Slot FIFO Queue<br/>Deterministic Arbiter]
         VectorQR[ISO Vector QR Engine<br/>UPI URI]
@@ -189,8 +189,8 @@ Never leave customers hanging with blank screens or 404 errors:
 ### 1. Clone & Install Dependencies
 Standard `npm install` works out-of-the-box across all packages and apps without any protocol issues:
 ```bash
-git clone https://github.com/gxurav1710/YouPI-PG.git youpi-pg
-cd youpi-pg
+git clone https://github.com/gxurav1710/PayNova.git paynova
+cd paynova
 npm install
 ```
 
@@ -211,7 +211,7 @@ npm start
 That's it! Your entire gateway cluster will spin up:
 - 🎛️ **Control Center Supervisor:** [`http://localhost:8090`](http://localhost:8090)
 - 📊 **Merchant Admin Panel:** [`http://localhost:6001`](http://localhost:6001)
-- 🛒 **YOUPI Showcase Demo Store:** [`http://localhost:5000`](http://localhost:5000)
+- 🛒 **PayNova Showcase Demo Store:** [`http://localhost:5000`](http://localhost:5000)
 - ⚡ **Payment REST API:** [`http://localhost:6100`](http://localhost:6100)
 - 💳 **Customer Checkout Portal:** [`http://localhost:7000`](http://localhost:7000)
 

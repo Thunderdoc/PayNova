@@ -13,7 +13,7 @@ class PaymentNotificationListenerService : NotificationListenerService() {
     override fun onCreate() {
         super.onCreate()
         apiClient = ApiClient(applicationContext)
-        Log.i(TAG, "YOUPI Payment Notification Listener Service created.")
+        Log.i(TAG, "Hackastra Pay Payment Notification Listener Service created.")
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -49,7 +49,7 @@ class PaymentNotificationListenerService : NotificationListenerService() {
             try {
                 val success = apiClient.sendObservation(parsed)
                 if (success) {
-                    Log.i(TAG, "Observation successfully transmitted to YOUPI PG backend.")
+                    Log.i(TAG, "Observation successfully transmitted to Hackastra Pay backend.")
                 } else {
                     Log.w(TAG, "Backend did not acknowledge observation transmission.")
                 }
@@ -62,7 +62,7 @@ class PaymentNotificationListenerService : NotificationListenerService() {
     override fun onDestroy() {
         super.onDestroy()
         executor.shutdown()
-        Log.i(TAG, "YOUPI Payment Notification Listener Service destroyed.")
+        Log.i(TAG, "Hackastra Pay Payment Notification Listener Service destroyed.")
     }
 
     companion object {

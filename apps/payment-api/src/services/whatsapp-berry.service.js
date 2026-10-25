@@ -12,15 +12,15 @@ let BerryProtocolClass = null;
 let qrcodeLib = null;
 
 async function loadDependencies() {
+  const configuredWorkerRoot = process.env.WHATSAPP_WORKER_ROOT
+    ? path.resolve(process.env.WHATSAPP_WORKER_ROOT)
+    : null;
   if (!BerryProtocolClass) {
     const candidates = [
       'berryprotocol',
       pathToFileURL(path.resolve(rootDir, 'node_modules/berryprotocol/dist/index.js')).href,
       pathToFileURL(path.resolve(rootDir, 'apps/payment-api/node_modules/berryprotocol/dist/index.js')).href,
-      'file:///D:/WA-USERAUTH DEV/node_modules/berryprotocol/dist/index.js',
-      'file:///D:/E-Commerce PKG/services/whatsapp-worker/node_modules/berryprotocol/dist/index.js',
-      'file:///D:/ECOM AND YOUPI PG INTEGRATION/E-Commerce PACKAGE/services/whatsapp-worker/node_modules/berryprotocol/dist/index.js',
-      'file:///D:/distribution/services/whatsapp-worker/node_modules/berryprotocol/dist/index.js'
+      ...(configuredWorkerRoot ? [pathToFileURL(path.join(configuredWorkerRoot, 'node_modules/berryprotocol/dist/index.js')).href] : [])
     ];
     for (const p of candidates) {
       try {
@@ -38,10 +38,7 @@ async function loadDependencies() {
       'qrcode',
       pathToFileURL(path.resolve(rootDir, 'node_modules/qrcode/lib/index.js')).href,
       pathToFileURL(path.resolve(rootDir, 'apps/payment-api/node_modules/qrcode/lib/index.js')).href,
-      'file:///D:/WA-USERAUTH DEV/node_modules/qrcode/lib/index.js',
-      'file:///D:/E-Commerce PKG/services/whatsapp-worker/node_modules/qrcode/lib/index.js',
-      'file:///D:/ECOM AND YOUPI PG INTEGRATION/E-Commerce PACKAGE/services/whatsapp-worker/node_modules/qrcode/lib/index.js',
-      'file:///D:/distribution/services/whatsapp-worker/node_modules/qrcode/lib/index.js'
+      ...(configuredWorkerRoot ? [pathToFileURL(path.join(configuredWorkerRoot, 'node_modules/qrcode/lib/index.js')).href] : [])
     ];
     for (const p of qrCandidates) {
       try {
@@ -477,6 +474,10 @@ export class WhatsAppBerryService extends EventEmitter {
     return this.status;
   }
 
+  get isConnected() {
+    return this.status === 'CONNECTED' || (this.client && this.status !== 'DISCONNECTED');
+  }
+
   getQrCode() {
     return this.qrCode;
   }
@@ -625,11 +626,14 @@ export class WhatsAppBerryService extends EventEmitter {
    */
   async sendOtp(to, otpCode, customerName = '') {
     const greeting = customerName ? `Hello *${customerName}*!` : 'Hello!';
+    // Customer-facing identity must match the merchant brand. Keep the
+    // internal YouPI protocol/package names out of messages sent to users.
+    const brandName = process.env.CUSTOMER_BRAND_NAME || 'PayNova';
     const message =
-      `🔐 *YOUPI PG Verification Code*\n\n` +
+      `🔐 *${brandName} Verification Code*\n\n` +
       `${greeting} Your one-time login OTP is: *${otpCode}*\n\n` +
       `⏱ _Valid for 5 minutes. Do not share this code with anyone._\n\n` +
-      `— *YOUPI PG Secure Payments*`;
+      `— *${brandName} Secure Payments*`;
 
     return this.sendMessage(to, message);
   }
@@ -728,6 +732,80 @@ export class WhatsAppBerryService extends EventEmitter {
         this.initialize().catch(() => {});
       }
       return { success: false, delivered: false, error: err.message, status: this.status };
+    }
+  }
+
+  /**
+   * Sends a document (such as a PDF receipt) to a WhatsApp recipient
+   * @param {string} to Recipient phone number
+   * @param {Buffer|string} document Document buffer or file path
+   * @param {string} fileName Target filename e.g. Hackastra_Receipt_123.pdf
+   * @param {string} caption Message caption
+   * @param {string} mimetype MIME type e.g. application/pdf
+   */
+  async sendDocument(to, document, fileName = 'PayNova_Receipt.pdf', caption = '', mimetype = 'application/pdf') {
+    const isDummy = to.includes('0000000000') || to.includes('1111111111');
+    if (isDummy || (process.env.NODE_ENV === 'test' && !this.forceRealDispatch)) {
+      console.log(`[WhatsAppBerryService] Test guardrail: Simulated document delivery (${fileName}) to ${to}`);
+      return {
+        success: true,
+        delivered: true,
+        simulated: true,
+        id: `doc_${Date.now()}`
+      };
+    }
+
+    if (this.isSimulatedMode) {
+      console.log(`[WhatsAppBerryService] Simulated WhatsApp PDF document to ${to} (${fileName})`);
+      return {
+        success: true,
+        delivered: true,
+        simulated: true,
+        id: `sim_doc_${Date.now()}`,
+        status: this.status
+      };
+    }
+
+    const jid = this.formatJid(to);
+    if (!jid) {
+      return { success: false, delivered: false, error: `Invalid recipient phone number: ${to}` };
+    }
+
+    try {
+      let docBuffer = Buffer.isBuffer(document) ? document : (typeof document === 'string' && fs.existsSync(document)) ? fs.readFileSync(document) : Buffer.from(document);
+      let result;
+
+      if (this.client && typeof this.client.sendDocument === 'function') {
+        result = await this.client.sendDocument(jid, docBuffer, { fileName, caption, mimetype });
+      } else if (this.client && typeof this.client.sendMessage === 'function') {
+        result = await this.client.sendMessage(jid, {
+          document: docBuffer,
+          mimetype,
+          fileName,
+          caption
+        });
+      } else if (this.client?.socket && typeof this.client.socket.sendMessage === 'function') {
+        result = await this.client.socket.sendMessage(jid, {
+          document: docBuffer,
+          mimetype,
+          fileName,
+          caption
+        });
+      } else {
+        // Fallback: send text with receipt details
+        return await this.sendMessage(to, `${caption}\n\n[Official PDF Receipt: ${fileName}]`);
+      }
+
+      console.log(`[WhatsAppBerryService] Official PDF receipt document sent to ${jid}`);
+      return {
+        success: true,
+        delivered: true,
+        id: result?.id || `doc_${Date.now()}`,
+        status: this.status
+      };
+    } catch (err) {
+      console.warn(`[WhatsAppBerryService] Document send notice: ${err.message}. Sending text fallback...`);
+      return await this.sendMessage(to, `${caption}\n\n[Official Receipt: ${fileName}]`);
     }
   }
 }

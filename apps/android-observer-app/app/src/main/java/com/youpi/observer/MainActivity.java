@@ -66,7 +66,7 @@ public class MainActivity extends Activity {
 
         // Header Title
         TextView tvTitle = new TextView(this);
-        tvTitle.setText("YOUPI SMS Gateway");
+        tvTitle.setText("Hackastra Pay SMS Observer");
         tvTitle.setTextColor(Color.WHITE);
         tvTitle.setTextSize(22f);
         tvTitle.setTypeface(null, Typeface.BOLD);
@@ -174,7 +174,7 @@ public class MainActivity extends Activity {
         lblManual.setPadding(0, 16, 0, 4);
         cardPairing.addView(lblManual);
 
-        etBaseUrl = createEditText(apiClient.getBaseUrl(), "http://your-server-ip:6100");
+        etBaseUrl = createEditText(apiClient.getBaseUrl(), "http://YOUR-COMPUTER-LAN-IP:6100");
         cardPairing.addView(etBaseUrl);
 
         etEnrollmentToken = createEditText("", "Enrollment Secret Token");
@@ -379,7 +379,7 @@ public class MainActivity extends Activity {
 
     private void handleScannedQrPayload(String rawPayload) {
         if (rawPayload == null || rawPayload.trim().isEmpty()) {
-            Toast.makeText(this, "INVALID YOUPI PAIRING QR", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "INVALID HACKASTRA PAIRING QR", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -388,13 +388,13 @@ public class MainActivity extends Activity {
 
             String type = json.optString("type", "");
             if (!"YOUPI_SMS_GATEWAY_PAIR".equals(type)) {
-                Toast.makeText(this, "INVALID YOUPI PAIRING QR", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "INVALID HACKASTRA PAIRING QR", Toast.LENGTH_LONG).show();
                 return;
             }
 
             String version = json.optString("version", "v1");
             if (!"v1".equals(version)) {
-                Toast.makeText(this, "INVALID YOUPI PAIRING QR", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "INVALID HACKASTRA PAIRING QR", Toast.LENGTH_LONG).show();
                 return;
             }
 
@@ -406,13 +406,13 @@ public class MainActivity extends Activity {
 
             final String serverUrl = json.optString("serverUrl", json.optString("gatewayUrl", json.optString("apiBaseUrl", "")));
             if (!serverUrl.startsWith("http://") && !serverUrl.startsWith("https://")) {
-                Toast.makeText(this, "INVALID YOUPI PAIRING QR", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "INVALID HACKASTRA PAIRING QR", Toast.LENGTH_LONG).show();
                 return;
             }
 
             final String token = json.optString("enrollmentToken", json.optString("token", ""));
             if (token.isEmpty()) {
-                Toast.makeText(this, "INVALID YOUPI PAIRING QR", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "INVALID HACKASTRA PAIRING QR", Toast.LENGTH_LONG).show();
                 return;
             }
 
@@ -444,7 +444,7 @@ public class MainActivity extends Activity {
 
         } catch (Exception e) {
             Log.e("MainActivity", "Error parsing QR: " + e.getMessage());
-            Toast.makeText(this, "INVALID YOUPI PAIRING QR", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "INVALID HACKASTRA PAIRING QR", Toast.LENGTH_LONG).show();
         }
     }
 
