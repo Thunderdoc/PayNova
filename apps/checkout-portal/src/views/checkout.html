@@ -3264,6 +3264,14 @@
         box-sizing: border-box !important;
       }
 
+      /* Phone drawer: support footer must stack (was 3 cramped columns) and
+         the merchant name must wrap instead of truncating to "PayNova Demo St..." */
+      #preGatewayAuthView .auth-support-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+      #preGatewayAuthView .auth-support-grid > div { padding: 10px 0; border-bottom: 1px solid #e2e8f0; }
+      #preGatewayAuthView .auth-support-grid > div:last-child { border-bottom: 0; }
+      .ypg-merchant-name { font-size: 14px !important; white-space: normal !important; display: -webkit-box !important; -webkit-line-clamp: 2 !important; -webkit-box-orient: vertical !important; }
+      .ypg-merchant-text-group { min-width: 0 !important; }
+
       #preGatewayAuthView[hidden] {
         display: none !important;
       }
@@ -5766,6 +5774,11 @@
           });
           const sendData = await sendRes.json();
           if (sendData && sendData.devOtp) lastReceivedDevOtp = sendData.devOtp;
+
+          if (!sendRes.ok) {
+            showOptionToast(sendData.error || 'Failed to send WhatsApp OTP.');
+            return;
+          }
 
           const greetingEl = document.getElementById('authOtpGreeting');
           if (greetingEl) {

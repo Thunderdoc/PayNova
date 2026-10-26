@@ -143,12 +143,27 @@ export function registerCustomerRoutes(server, ctx) {
 
     console.log(`[CustomerAuth] OTP generated for +91${cleanMobile}: ${otpCode} (Expires: 5 mins)`);
 
+    // If WhatsApp dispatch genuinely failed (not a simulated/test delivery),
+    // say so plainly instead of showing an OTP screen for a code that will
+    // never arrive. The OTP stays stored so a retry works once WhatsApp is linked.
+    if (dispatchResult && dispatchResult.success === false) {
+      HttpServer.json(res, 503, {
+        success: false,
+        error: dispatchResult.message || 'WhatsApp is not connected. The merchant must link WhatsApp in Merchant Admin before OTP login can work.',
+        whatsappConnected: false
+      });
+      return;
+    }
+
     HttpServer.json(res, 200, {
       success: true,
       message: 'OTP sent to your WhatsApp number.',
       mobileNumber: cleanMobile,
       expiresInSeconds: 300,
-      devOtp: (process.env.NODE_ENV !== 'production' ? otpCode : undefined),
+      // SECURITY: devOtp only in unit tests. Previously this leaked the real OTP
+      // in every non-production response — on a public demo anyone could read
+      // another customer's OTP from the API response and log in as them.
+      devOtp: (process.env.NODE_ENV === 'test' ? otpCode : undefined),
       dispatch: dispatchResult
     });
   });
