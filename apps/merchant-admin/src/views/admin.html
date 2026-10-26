@@ -1038,6 +1038,107 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
     }
+
+    /* PAYMENT SIMULATOR light-theme rescue (Bright White).
+       The simulator view was built with hardcoded dark inline styles, so in
+       light theme it rendered as a dark island on a light page, and the
+       banner gradient washed its paragraph text out. These rules remap
+       only the #subViewDevSimulator scope; dark theme keeps its original
+       hardcoded look. !important is required because inline styles win
+       over normal stylesheet rules. Accent chips that sit on dark
+       backgrounds (amber/brown, red/dark-red) are deliberately untouched. */
+    [data-theme="light"] #subViewDevSimulator { color-scheme: light; }
+    [data-theme="dark"] #subViewDevSimulator { color-scheme: dark; }
+    [data-theme="light"] #subViewDevSimulator .card {
+      background: var(--bg-card) !important;
+      border-color: var(--border) !important;
+    }
+    [data-theme="light"] #subViewDevSimulator .sim-banner {
+      background: linear-gradient(135deg, #dbeafe 0%, #ffffff 100%) !important;
+      border-color: #93c5fd !important;
+    }
+    [data-theme="light"] #subViewDevSimulator .sim-banner h2 { color: var(--text-heading) !important; }
+    [data-theme="light"] #subViewDevSimulator .sim-banner p { color: var(--text) !important; }
+    [data-theme="light"] #subViewDevSimulator .sim-banner .sim-testmode-box {
+      background: var(--bg-elevated) !important; border-color: var(--border) !important;
+    }
+    [data-theme="light"] #subViewDevSimulator .sim-banner .sim-testmode-label { color: var(--text-muted) !important; }
+    /* Dark panel fills -> light card surface. */
+    [data-theme="light"] #subViewDevSimulator [style*="background:#0f172a"],
+    [data-theme="light"] #subViewDevSimulator [style*="background:#0b0f19"] {
+      background: var(--bg-card) !important;
+    }
+    /* Dark input/well fills -> light elevated surface. */
+    [data-theme="light"] #subViewDevSimulator [style*="background:#1e293b"],
+    [data-theme="light"] #subViewDevSimulator [style*="background:#020617"],
+    [data-theme="light"] #subViewDevSimulator [style*="background:#090d16"],
+    [data-theme="light"] #subViewDevSimulator [style*="background:#0b1120"],
+    [data-theme="light"] #subViewDevSimulator [style*="background:#1c1917"],
+    [data-theme="light"] #subViewDevSimulator [style*="background:#334155"] {
+      background: var(--bg-elevated) !important;
+    }
+    /* Dark borders -> theme border. */
+    [data-theme="light"] #subViewDevSimulator [style*="border:1px solid #334155"],
+    [data-theme="light"] #subViewDevSimulator [style*="border:1px solid #475569"],
+    [data-theme="light"] #subViewDevSimulator [style*="border-bottom:1px solid #1e293b"] {
+      border-color: var(--border) !important;
+    }
+    /* Text: near-white -> dark; dim labels -> muted; pale accents darkened. */
+    [data-theme="light"] #subViewDevSimulator [style*="color:#ffffff"] { color: var(--text-heading) !important; }
+    [data-theme="light"] #subViewDevSimulator [style*="color:#f8fafc"],
+    [data-theme="light"] #subViewDevSimulator [style*="color:#e2e8f0"],
+    [data-theme="light"] #subViewDevSimulator [style*="color:#cbd5e1"] { color: var(--text) !important; }
+    [data-theme="light"] #subViewDevSimulator [style*="color:#94a3b8"] { color: var(--text-muted) !important; }
+    [data-theme="light"] #subViewDevSimulator [style*="color:#38bdf8"] { color: #0284c7 !important; }
+    [data-theme="light"] #subViewDevSimulator [style*="color:#93c5fd"] { color: #1d4ed8 !important; }
+    [data-theme="light"] #subViewDevSimulator [style*="color:#22c55e"] { color: #16a34a !important; }
+    [data-theme="light"] #subViewDevSimulator [style*="color:#34d399"],
+    [data-theme="light"] #subViewDevSimulator [style*="color:#10b981"],
+    [data-theme="light"] #subViewDevSimulator [style*="color:#86efac"],
+    [data-theme="light"] #subViewDevSimulator [style*="color:#6ee7b7"] { color: #059669 !important; }
+    [data-theme="light"] #subViewDevSimulator [style*="color:#fca5a5"],
+    [data-theme="light"] #subViewDevSimulator [style*="color:#f87171"] { color: #dc2626 !important; }
+    [data-theme="light"] #subViewDevSimulator [style*="color:#fbbf24"] { color: #d97706 !important; }
+    [data-theme="light"] #subViewDevSimulator [style*="color:#f472b6"] { color: #db2777 !important; }
+    [data-theme="light"] #subViewDevSimulator [style*="color:#c4b5fd"],
+    [data-theme="light"] #subViewDevSimulator [style*="color:#c084fc"] { color: #7c3aed !important; }
+    [data-theme="light"] #subViewDevSimulator option { background: #ffffff; color: var(--text); }
+    [data-theme="light"] #subViewDevSimulator input::placeholder,
+    [data-theme="light"] #subViewDevSimulator textarea::placeholder { color: var(--text-muted); opacity: 1; }
+    /* JS-toggled simulator boxes: JS re-serializes their inline style to
+       rgb() when flipping display, which defeats the attribute selectors
+       above — so these id rules carry them regardless. */
+    [data-theme="light"] #simSelectedCustomerBox,
+    [data-theme="light"] #simSessionsList {
+      background: var(--bg-elevated) !important; border-color: var(--border) !important;
+    }
+    [data-theme="light"] #simSelectedSessionBar {
+      background: var(--bg-elevated) !important;
+    }
+    [data-theme="light"] #simCustomerSelect,
+    [data-theme="light"] #simCustomerSearchInput {
+      background: var(--bg-elevated) !important; color: var(--text) !important; border-color: var(--border) !important;
+    }
+    [data-theme="light"] #simCustName { color: var(--text-heading) !important; }
+    [data-theme="light"] #simCustPhone,
+    [data-theme="light"] #simSelectedSessionId { color: #0284c7 !important; }
+    [data-theme="light"] #simCustEmail,
+    [data-theme="light"] #simSelectedSessionOrder { color: var(--text-muted) !important; }
+    [data-theme="light"] #simSelectedSessionAmount { color: #16a34a !important; }
+    [data-theme="light"] #simTerminalNotice {
+      color: #dc2626 !important; background: #fef2f2 !important; border-color: #fca5a5 !important;
+    }
+    /* STORE SETTINGS brand subview: the "Include Receipt Fields" box and
+       the receipt-toggle labels are hardcoded dark/white, invisible on the
+       light card. Same rescue, scoped to #subViewStoreBrand. */
+    [data-theme="light"] #subViewStoreBrand [style*="background:#0f172a"] {
+      background: var(--bg-elevated) !important;
+    }
+    [data-theme="light"] #subViewStoreBrand [style*="border:1px solid #334155"] {
+      border-color: var(--border) !important;
+    }
+    [data-theme="light"] #subViewStoreBrand [style*="color:#ffffff"] { color: var(--text-heading) !important; }
+    [data-theme="light"] #subViewStoreBrand [style*="color:#38bdf8"] { color: #0284c7 !important; }
   </style>
 </head>
 
@@ -2077,7 +2178,7 @@
       <!-- SUB-VIEW: DEVELOPER TOOLS -> PAYMENT SIMULATOR (FEATURE 65) -->
       <div id="subViewDevSimulator" hidden>
         <!-- Header Banner -->
-        <div class="card"
+        <div class="card sim-banner"
           style="border:2px solid #3b82f6; background:linear-gradient(135deg, rgba(59,130,246,0.12) 0%, rgba(15,23,42,0.98) 100%); margin-bottom:1.5rem;">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
             <div>
@@ -2097,10 +2198,10 @@
               </p>
             </div>
             <!-- Test Mode Quick Status / Enable -->
-            <div
+            <div class="sim-testmode-box"
               style="background:#1e293b; border:1px solid #334155; border-radius:8px; padding:0.75rem 1rem; display:flex; align-items:center; gap:0.75rem;">
               <div style="font-size:0.8rem;">
-                <div style="color:#94a3b8; font-size:0.72rem; text-transform:uppercase;">Test Mode Status</div>
+                <div class="sim-testmode-label" style="color:#94a3b8; font-size:0.72rem; text-transform:uppercase;">Test Mode Status</div>
                 <strong id="simTestModeStatus" style="color:#f59e0b;">Checking...</strong>
               </div>
               <button id="simBtnEnableTestMode" class="btn btn-primary" onclick="simQuickEnableTestMode()"

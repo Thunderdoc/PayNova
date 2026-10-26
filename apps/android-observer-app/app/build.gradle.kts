@@ -11,10 +11,25 @@ android {
         applicationId = "com.youpi.observer"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
     }
 
+    // Release signing is opt-in: set PAYNOVA_KEYSTORE (+ passwords/alias) in the
+    // environment when building a shippable APK. Without it, release stays
+    // unsigned (installable only after signing) and debug builds are unaffected.
+    // No key material ever lives in this repo.
+    val paynovaKeystore = System.getenv("PAYNOVA_KEYSTORE")
+    if (paynovaKeystore != null) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(paynovaKeystore)
+                storePassword = System.getenv("PAYNOVA_STORE_PASSWORD")
+                keyAlias = System.getenv("PAYNOVA_KEY_ALIAS")
+                keyPassword = System.getenv("PAYNOVA_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         debug {
             // Keep local phone testing installable alongside the production package.
@@ -24,6 +39,9 @@ android {
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (paynovaKeystore != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {

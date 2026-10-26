@@ -40,10 +40,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Premium, responsive programmatic layout. The pairing/authentication logic remains unchanged.
+        // Background: deep navy gradient (top) melting into midnight blue (bottom).
         val layout = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(28, 36, 28, 28)
-            setBackgroundColor(android.graphics.Color.parseColor("#071126"))
+            setPadding(28, 40, 28, 32)
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(
+                    android.graphics.Color.parseColor("#0A1730"),
+                    android.graphics.Color.parseColor("#071126"),
+                    android.graphics.Color.parseColor("#050A18")
+                )
+            )
         }
 
         val header = android.widget.LinearLayout(this).apply {
@@ -51,34 +59,49 @@ class MainActivity : AppCompatActivity() {
             gravity = Gravity.CENTER_VERTICAL
             setPadding(0, 0, 0, 24)
         }
+        // Logo in a rounded, softly glowing tile.
         val logo = ImageView(this).apply {
             setImageResource(com.youpi.observer.R.drawable.ic_hackastra_observer)
             scaleType = ImageView.ScaleType.CENTER_INSIDE
+            background = GradientDrawable().apply {
+                setColor(android.graphics.Color.parseColor("#102A50"))
+                setStroke(2, android.graphics.Color.parseColor("#2C5BA8"))
+                cornerRadius = 22f
+            }
+            elevation = 6f
         }
-        logo.setPadding(4, 4, 4, 4)
-        header.addView(logo, android.widget.LinearLayout.LayoutParams(76, 76))
+        logo.setPadding(10, 10, 10, 10)
+        header.addView(logo, android.widget.LinearLayout.LayoutParams(80, 80))
         val heading = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
             setPadding(16, 0, 8, 0)
         }
         heading.addView(TextView(this).apply {
             text = "PayNova"
-            textSize = 24f
+            textSize = 27f
             setTextColor(android.graphics.Color.WHITE)
             setTypeface(null, android.graphics.Typeface.BOLD)
         })
         heading.addView(TextView(this).apply {
-            text = "Payment Observer\nSecure device connection"
+            text = "O B S E R V E R"
+            textSize = 11f
+            setTextColor(android.graphics.Color.parseColor("#5EA0FF"))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 2, 0, 0)
+        })
+        heading.addView(TextView(this).apply {
+            text = "Secure device connection"
             textSize = 13f
             setTextColor(android.graphics.Color.parseColor("#AFC6EA"))
-            setPadding(0, 3, 0, 0)
+            setPadding(0, 4, 0, 0)
         })
         header.addView(heading, android.widget.LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(Button(this).apply {
             text = "HELP"
             textSize = 12f
             setTextColor(android.graphics.Color.WHITE)
-            background = roundedButton("#102A50")
+            background = roundedPill("#102A50")
+            elevation = 4f
             setOnClickListener { Toast.makeText(this@MainActivity, "Use the dashboard QR or enter the gateway details below.", Toast.LENGTH_LONG).show() }
         }, android.widget.LinearLayout.LayoutParams(92, 48))
         layout.addView(header)
@@ -87,8 +110,9 @@ class MainActivity : AppCompatActivity() {
             text = "NOTIFICATION ACCESS\nChecking permission status..."
             textSize = 17f
             setTextColor(android.graphics.Color.parseColor("#D4E4FF"))
-            setPadding(24, 24, 24, 24)
+            setPadding(28, 26, 28, 26)
             background = roundedCard("#0B2740", "#087F88")
+            elevation = 8f
         }
         tvStatus.textSize = 15f
         tvStatus.minHeight = 100
@@ -101,8 +125,9 @@ class MainActivity : AppCompatActivity() {
             text = "DEVICE\nAndroid • ${android.os.Build.MODEL}"
             textSize = 16f
             setTextColor(android.graphics.Color.parseColor("#D4E4FF"))
-            setPadding(24, 22, 24, 22)
+            setPadding(28, 24, 28, 24)
             background = roundedCard("#0B1D3B", "#173F76")
+            elevation = 8f
         }
         tvDeviceId.textSize = 14f
         tvDeviceId.minHeight = 78
@@ -114,9 +139,10 @@ class MainActivity : AppCompatActivity() {
         btnPermission = Button(this).apply {
             text = "Grant Notification Listener Access"
             setTextColor(android.graphics.Color.WHITE)
-            background = roundedButton("#16325F")
+            background = roundedPill("#16325F")
             minHeight = 64
             isAllCaps = false
+            elevation = 6f
             setOnClickListener {
                 startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
             }
@@ -130,8 +156,9 @@ class MainActivity : AppCompatActivity() {
             text = "PAIR WITH QR CODE\nScan the pairing QR from the PayNova dashboard to connect this device."
             textSize = 15f
             setTextColor(android.graphics.Color.parseColor("#D4E4FF"))
-            setPadding(24, 24, 24, 12)
+            setPadding(28, 26, 28, 14)
             background = roundedCard("#0B1D3B", "#173F76")
+            elevation = 8f
         }
         layout.addView(pairingTitle, android.widget.LinearLayout.LayoutParams(
             android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
@@ -142,9 +169,10 @@ class MainActivity : AppCompatActivity() {
             text = "▣  SCAN PAIRING QR"
             textSize = 14f
             setTextColor(android.graphics.Color.WHITE)
-            background = roundedButton("#0866FF")
+            background = roundedPill("#0866FF")
             minHeight = 64
             isAllCaps = false
+            elevation = 8f
             setOnClickListener {
                 if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(arrayOf(Manifest.permission.CAMERA), 4101)
@@ -198,18 +226,28 @@ class MainActivity : AppCompatActivity() {
         btnPair = Button(this).apply {
             text = "Pair with Merchant Gateway"
             setTextColor(android.graphics.Color.WHITE)
-            background = roundedButton("#0B8F78")
+            background = roundedPill("#0B8F78")
             minHeight = 64
             isAllCaps = false
+            elevation = 8f
             setOnClickListener {
                 performPairing()
             }
         }
         layout.addView(btnPair)
 
+        // Footer: quiet brand line, no claims beyond what the app does.
+        layout.addView(TextView(this).apply {
+            text = "PayNova Observer • v1.1.0\nKeep notification access on — payments are observed only on this device."
+            textSize = 12f
+            gravity = Gravity.CENTER
+            setTextColor(android.graphics.Color.parseColor("#7186A8"))
+            setPadding(0, 28, 0, 8)
+        })
+
         val scroll = ScrollView(this).apply {
             isFillViewport = true
-            setBackgroundColor(android.graphics.Color.parseColor("#071126"))
+            setBackgroundColor(android.graphics.Color.parseColor("#050A18"))
             addView(layout)
         }
         setContentView(scroll)
@@ -286,16 +324,22 @@ class MainActivity : AppCompatActivity() {
         cornerRadius = 18f
     }
 
+    // Fully rounded pill for primary actions (64px tall buttons).
+    private fun roundedPill(color: String) = GradientDrawable().apply {
+        setColor(android.graphics.Color.parseColor(color))
+        cornerRadius = 32f
+    }
+
     private fun roundedInput() = GradientDrawable().apply {
         setColor(android.graphics.Color.parseColor("#13213A"))
         setStroke(1, android.graphics.Color.parseColor("#2C4670"))
-        cornerRadius = 14f
+        cornerRadius = 18f
     }
 
     private fun roundedCard(fill: String, stroke: String) = GradientDrawable().apply {
         setColor(android.graphics.Color.parseColor(fill))
         setStroke(2, android.graphics.Color.parseColor(stroke))
-        cornerRadius = 24f
+        cornerRadius = 28f
     }
 
     private fun performPairing() {
