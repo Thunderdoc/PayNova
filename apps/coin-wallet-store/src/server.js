@@ -374,11 +374,13 @@ export class CoinWalletStoreServer {
               }
             });
 
-            // Normalize checkoutUrl for localhost development / testing to prevent tunnel offline issues
-            let resolvedCheckoutUrl = payment.checkoutUrl;
-            if (host.includes('localhost') || host.includes('127.0.0.1')) {
-              resolvedCheckoutUrl = `${proto}://${host}/checkout/${payment.paymentId}`;
-            }
+            // Checkout must ALWAYS go through this store's own public host, because
+            // the store reverse-proxies /checkout/* to the checkout portal. The API's
+            // raw checkoutUrl points at localhost:7000, which no visitor's browser
+            // can reach — on any non-localhost deploy (Render, tunnel, LAN) that
+            // produced a blank checkout modal. Previously this rewrite only ran
+            // for localhost hosts, which is exactly backwards for production.
+            const resolvedCheckoutUrl = `${proto}://${host}/checkout/${payment.paymentId}`;
 
             res.writeHead(200, {
               'Content-Type': 'application/json',
