@@ -30,7 +30,11 @@ export class CoinWalletStoreServer {
     const internalPort = process.env.PAYMENT_API_PORT || 6100;
     this.gatewayApiUrl = options.gatewayApiUrl || process.env.PAYMENT_API_INTERNAL_URL || `http://127.0.0.1:${internalPort}`;
     this.merchantId = options.merchantId || '00000000-0000-0000-0000-000000000001';
-    this.webhookSecret = options.webhookSecret || 'merchant_webhook_secret_for_wallet_store';
+    // Rotation-safe: the DB seed already uses COIN_STORE_WEBHOOK_SECRET
+    // (packages/db migrate), so the store must read the same env var —
+    // otherwise the API signs with the rotated DB secret while the store
+    // still verifies with the hardcoded default and every webhook fails.
+    this.webhookSecret = options.webhookSecret || process.env.COIN_STORE_WEBHOOK_SECRET || 'merchant_webhook_secret_for_wallet_store';
 
     this.paymentClient = new YoupiPaymentClient({
       apiUrl: this.gatewayApiUrl,
