@@ -188,6 +188,11 @@ export class CoinWalletStoreServer {
         const targetPath = stripped + (url.search || '');
         const adminHeaders = { ...req.headers, host: `localhost:${adminPort}` };
         delete adminHeaders.authorization; // Basic creds are for this gate only; admin injects its own server-side key downstream.
+        // The gate above already verified the caller, so forward the server-side
+        // admin key with the request: owner-admin browser calls that merchant-admin
+        // guards with isAdminRequestAuthorized (e.g. logo upload) then pass, without
+        // the key ever reaching the browser. Without a configured key nothing is added.
+        if (process.env.ADMIN_API_KEY) adminHeaders['x-admin-api-key'] = process.env.ADMIN_API_KEY;
         const proxyReq = http.request({
           hostname: '127.0.0.1',
           port: adminPort,

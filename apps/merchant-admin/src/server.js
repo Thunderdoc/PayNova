@@ -82,6 +82,154 @@ export class AdminServer {
     return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
   }
 
+  // ---- Brand logo image upload (owner admin only) ----
+  // No multipart library is used: the single-file body is parsed by hand
+  // (boundary + file bytes). SVG is rejected: it can carry scripts, and
+  // only raster images are verified here by magic bytes, never by extension.
+  uploadsDir() {
+    return path.resolve(__dirname, '..', 'public', 'uploads');
+  }
+
+  detectUploadImage(buf) {
+    if (buf.length >= 8
+      && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47
+      && buf[4] === 0x0d && buf[5] === 0x0a && buf[6] === 0x1a && buf[7] === 0x0a) {
+      return { ext: 'png', contentType: 'image/png' };
+    }
+    if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) {
+      return { ext: 'jpg', contentType: 'image/jpeg' };
+    }
+    if (buf.length >= 6) {
+      const head = buf.subarray(0, 6).toString('ascii');
+      if (head === 'GIF87a' || head === 'GIF89a') return { ext: 'gif', contentType: 'image/gif' };
+    }
+    if (buf.length >= 12
+      && buf.subarray(0, 4).toString('ascii') === 'RIFF'
+      && buf.subarray(8, 12).toString('ascii') === 'WEBP') {
+      return { ext: 'webp', contentType: 'image/webp' };
+    }
+    return null;
+  }
+
+  // Returns the raw bytes of the form field named "logo", or throws.
+  parseMultipartLogo(body, boundary) {
+    const sep = Buffer.from('--' + boundary);
+    let idx = body.indexOf(sep);
+    while (idx !== -1) {
+      let pos = idx + sep.length;
+      if (body[pos] === 0x2d && body[pos + 1] === 0x2d) break; // closing boundary
+      if (body[pos] === 0x0d && body[pos + 1] === 0x0a) pos += 2;
+      const headerEnd = body.indexOf('\r\n\r\n', pos);
+      if (headerEnd === -1) break;
+      const headers = body.subarray(pos, headerEnd).toString('latin1');
+      const dataStart = headerEnd + 4;
+      const next = body.indexOf(sep, dataStart);
+      if (next === -1) break;
+      const dataEnd = Math.max(dataStart, next - 2); // strip trailing CRLF
+      const m = /Content-Disposition:\s*form-data;\s*name="([^"]*)"(?:;\s*filename="([^"]*)")?/i.exec(headers);
+      if (m && m[1] === 'logo' && m[2]) return body.subarray(dataStart, dataEnd);
+      idx = next;
+    }
+    throw new Error('No image file in upload');
+  }
+
+  async handleBrandingLogoUpload(req, res) {
+    const sendJson = (status, obj) => {
+      res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify(obj));
+    };
+    if (!this.isAdminRequestAuthorized(req)) {
+      sendJson(process.env.ADMIN_API_KEY ? 401 : 503, {
+        error: process.env.ADMIN_API_KEY ? 'Admin authentication required.' : 'Admin API is not configured for secure access.'
+      });
+      return;
+    }
+    const contentType = String(req.headers['content-type'] || '');
+    const boundaryMatch = /boundary=(?:"([^"]+)"|([^;]+))/.exec(contentType);
+    if (!contentType.startsWith('multipart/form-data') || !boundaryMatch) {
+      sendJson(400, { error: 'Upload must be a multipart image file.' });
+      return;
+    }
+    const boundary = (boundaryMatch[1] || boundaryMatch[2]).trim();
+    const MAX_FILE_BYTES = 2 * 1024 * 1024;
+    const BODY_CAP = MAX_FILE_BYTES + 256 * 1024; // file + multipart overhead
+    const chunks = [];
+    let total = 0;
+    let overCap = false;
+    await new Promise((resolve) => {
+      req.on('data', (chunk) => {
+        total += chunk.length;
+        if (total <= BODY_CAP) chunks.push(chunk);
+        else overCap = true; // keep draining, but do not buffer unbounded input
+      });
+      req.on('end', resolve);
+      req.on('error', resolve);
+    });
+    if (overCap) {
+      sendJson(400, { error: 'Image must be 2 MB or smaller.' });
+      return;
+    }
+    let fileBytes;
+    try {
+      fileBytes = this.parseMultipartLogo(Buffer.concat(chunks), boundary);
+    } catch (e) {
+      sendJson(400, { error: e.message || 'Invalid upload.' });
+      return;
+    }
+    if (fileBytes.length === 0) {
+      sendJson(400, { error: 'Uploaded file is empty.' });
+      return;
+    }
+    if (fileBytes.length > MAX_FILE_BYTES) {
+      sendJson(400, { error: 'Image must be 2 MB or smaller.' });
+      return;
+    }
+    const detected = this.detectUploadImage(fileBytes);
+    if (!detected) {
+      sendJson(400, { error: 'Only PNG, JPEG, WebP or GIF images are allowed.' });
+      return;
+    }
+    const filename = crypto.randomBytes(16).toString('hex') + '.' + detected.ext;
+    try {
+      const dir = this.uploadsDir();
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, filename), fileBytes);
+    } catch {
+      sendJson(500, { error: 'Failed to store uploaded image.' });
+      return;
+    }
+    sendJson(200, { url: '/uploads/' + filename });
+  }
+
+  serveUploadedLogo(res, pathname) {
+    const name = pathname.slice('/uploads/'.length);
+    const send404 = () => {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Not found' }));
+    };
+    if (!/^[A-Za-z0-9_-]+\.(png|jpg|jpeg|gif|webp)$/.test(name)) {
+      send404();
+      return;
+    }
+    const dir = this.uploadsDir();
+    const file = path.resolve(dir, name);
+    if (!file.startsWith(dir + path.sep) || !fs.existsSync(file)) {
+      send404();
+      return;
+    }
+    const ext = name.split('.').pop().toLowerCase();
+    const type = ext === 'png' ? 'image/png'
+      : ext === 'gif' ? 'image/gif'
+      : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+    const stat = fs.statSync(file);
+    res.writeHead(200, {
+      'Content-Type': type,
+      'Content-Length': stat.size,
+      'Cache-Control': 'public, max-age=31536000, immutable'
+    });
+    fs.createReadStream(file).pipe(res);
+  }
+
   // ---- Merchant portal (self-serve registration + login) ----
   // These routes are deliberately separate from the owner dashboard:
   // a merchant session cookie is never accepted for / or /admin, and
@@ -416,6 +564,19 @@ export class AdminServer {
           'Access-Control-Allow-Origin': '*'
         });
         res.end(JSON.stringify(tickets));
+        return;
+      }
+
+      // Brand logo image upload (owner admin only). Must stay BEFORE the
+      // generic /api proxy below, or it would be forwarded to payment-api.
+      if (pathname === '/api/admin/branding-logo' && req.method === 'POST') {
+        await this.handleBrandingLogoUpload(req, res);
+        return;
+      }
+
+      // Uploaded brand logos (public read; upload itself is admin-gated).
+      if (req.method === 'GET' && pathname.startsWith('/uploads/')) {
+        this.serveUploadedLogo(res, pathname);
         return;
       }
 

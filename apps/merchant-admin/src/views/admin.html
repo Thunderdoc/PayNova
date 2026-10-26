@@ -1460,6 +1460,19 @@
                   <span
                     style="font-size:0.72rem; color:var(--text-muted); display:block; margin-top:0.25rem;">Transparent
                     PNG or SVG recommended. When left blank, your store initial letter is used.</span>
+                  <div style="display:flex; gap:0.5rem; align-items:center; margin-top:0.5rem; flex-wrap:wrap;">
+                    <button type="button" id="btnUploadLogo" class="btn btn-secondary"
+                      style="font-size:0.78rem; padding:0.4rem 0.9rem;"
+                      onclick="document.getElementById('logoUploadInput').click()">📤 Upload image</button>
+                    <input id="logoUploadInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden
+                      onchange="uploadBrandLogoFile(this.files && this.files[0])" />
+                    <img id="logoUploadPreview" alt="Current brand logo"
+                      style="height:40px; max-width:120px; object-fit:contain; display:none; border:1px solid #e2e8f0; border-radius:8px; background:#fff; padding:2px;"
+                      onerror="this.style.display='none'" />
+                    <span id="logoUploadStatus"
+                      style="font-size:0.72rem; color:var(--text-muted);">PNG, JPEG, WebP or GIF, max 2 MB.
+                      Upload fills the URL above — then click Save to keep it.</span>
+                  </div>
                 </div>
               </div>
 
@@ -4739,6 +4752,7 @@
 
           setVal('settingAppName', branding.appName || 'PayNova');
           setVal('settingLogoUrl', branding.logoUrl);
+          syncLogoUploadPreview();
           setVal('settingSidebarNotice', branding.sidebarNotice);
           setVal('settingFooterGuarantee', branding.footerGuarantee);
           setVal('settingCounterInstructions', branding.counterInstructions);
@@ -4926,6 +4940,57 @@
           fetchGatewaySettings();
         }
       } catch (e) { }
+    }
+
+    // --- BRAND LOGO IMAGE UPLOAD (file picker beside the Logo URL field) ---
+    // Upload only supplies the URL: the existing Save flow still persists
+    // branding.logoUrl, exactly as when a link is pasted by hand.
+    function syncLogoUploadPreview() {
+      const field = document.getElementById('settingLogoUrl');
+      const preview = document.getElementById('logoUploadPreview');
+      if (!field || !preview) return;
+      const url = field.value.trim();
+      if (url) {
+        preview.src = url;
+        preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
+      }
+    }
+
+    async function uploadBrandLogoFile(file) {
+      const input = document.getElementById('logoUploadInput');
+      const status = document.getElementById('logoUploadStatus');
+      const btn = document.getElementById('btnUploadLogo');
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) {
+        showAdminToast('Image must be 2 MB or smaller.', false);
+        if (input) input.value = '';
+        return;
+      }
+      if (status) status.textContent = 'Uploading…';
+      if (btn) btn.disabled = true;
+      try {
+        const form = new FormData();
+        form.append('logo', file);
+        const res = await fetch(`${API_BASE}/api/admin/branding-logo`, { method: 'POST', body: form });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.url) {
+          showAdminToast(data.error || 'Logo upload failed.', false);
+          return;
+        }
+        const field = document.getElementById('settingLogoUrl');
+        if (field) field.value = `${API_BASE}${data.url}`;
+        syncLogoUploadPreview();
+        updateLiveWhiteLabelPreview();
+        showAdminToast('Logo uploaded. Click Save to keep it.');
+      } catch (e) {
+        showAdminToast('Logo upload failed. Check connection and try again.', false);
+      } finally {
+        if (status) status.textContent = 'PNG, JPEG, WebP or GIF, max 2 MB. Upload fills the URL above — then click Save to keep it.';
+        if (btn) btn.disabled = false;
+        if (input) input.value = '';
+      }
     }
 
     async function saveMerchantBrandingAndToggles() {
