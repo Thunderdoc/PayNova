@@ -11,8 +11,14 @@
 # - Free instances sleep after ~15 min idle (~1 min wake on first visit).
 # - SQLite data lives on the ephemeral filesystem: demo data resets on
 #   redeploy/restart. Never use this demo for real school/merchant money.
-# - Merchant admin (6001) and the raw API (6100) are NOT publicly exposed
-#   here — they run inside the container only.
+# - Merchant admin (6001) and the raw API (6100) are NOT directly exposed
+#   here — they run inside the container only. The admin panel IS reachable
+#   through the store at /admin, behind HTTP Basic Auth
+#   (ADMIN_DASHBOARD_USER / ADMIN_DASHBOARD_PASSWORD, set in the Render
+#   dashboard — never in this file). The store strips the /admin prefix so
+#   the admin page's own /api proxy (which injects ADMIN_API_KEY
+#   server-side) keeps working, and direct /api/v1/admin/* calls without
+#   that key are rejected by the payment API once ADMIN_API_KEY is set.
 # - Real payment verification needs the owner's paired observers (Android
 #   SMS app / Gmail OAuth) and WhatsApp OTP pairing; until those are paired,
 #   checkout shows the login/QR flow but live UPI verification will not
@@ -31,4 +37,17 @@ services:
         value: localhost
       - key: NODE_ENV
         value: development
+      - key: ADMIN_API_BASE
+        value: /admin
+      # Dashboard-managed secrets (sync:false = Render dashboard owns the
+      # value; the Blueprint never overwrites it). Set both in the Render
+      # dashboard: ADMIN_DASHBOARD_PASSWORD = the password for /admin,
+      # ADMIN_API_KEY = server-to-server key for the admin API surface.
+      - key: ADMIN_DASHBOARD_USER
+        value: admin
+        sync: false
+      - key: ADMIN_DASHBOARD_PASSWORD
+        sync: false
+      - key: ADMIN_API_KEY
+        sync: false
     healthCheckPath: /

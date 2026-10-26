@@ -1,4 +1,5 @@
 import http from 'node:http';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -144,6 +145,67 @@ export class CoinWalletStoreServer {
           res.end(fs.readFileSync(openApiPath, 'utf8'));
           return;
         }
+      }
+
+      // REVERSE PROXY: /admin/* -> Merchant Admin (Port 6001), PASSWORD-GATED.
+      // The admin panel has no login of its own, so the store is its only
+      // public door: every request here must pass HTTP Basic Auth against
+      // ADMIN_DASHBOARD_USER / ADMIN_DASHBOARD_PASSWORD. With no password
+      // configured the door stays shut (503) instead of opening unguarded.
+      // The /admin prefix is stripped so the admin page's own /api proxy
+      // (which injects the server-side ADMIN_API_KEY) keeps working.
+      if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+        const dashboardPassword = process.env.ADMIN_DASHBOARD_PASSWORD || '';
+        if (!dashboardPassword) {
+          res.writeHead(503, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Merchant admin access is not configured on this deployment.' }));
+          return;
+        }
+        const dashboardUser = process.env.ADMIN_DASHBOARD_USER || 'admin';
+        const authHeader = req.headers.authorization || '';
+        let authorized = false;
+        if (authHeader.startsWith('Basic ')) {
+          let decoded = '';
+          try { decoded = Buffer.from(authHeader.slice(6), 'base64').toString('utf8'); } catch {}
+          const sep = decoded.indexOf(':');
+          const givenUser = sep >= 0 ? decoded.slice(0, sep) : decoded;
+          const givenPass = sep >= 0 ? decoded.slice(sep + 1) : '';
+          authorized = givenUser.length === dashboardUser.length
+            && givenPass.length === dashboardPassword.length
+            && crypto.timingSafeEqual(Buffer.from(givenUser, 'utf8'), Buffer.from(dashboardUser, 'utf8'))
+            && crypto.timingSafeEqual(Buffer.from(givenPass, 'utf8'), Buffer.from(dashboardPassword, 'utf8'));
+        }
+        if (!authorized) {
+          res.writeHead(401, {
+            'Content-Type': 'application/json',
+            'WWW-Authenticate': 'Basic realm="PayNova Merchant Admin"'
+          });
+          res.end(JSON.stringify({ error: 'Merchant admin authentication required.' }));
+          return;
+        }
+        const adminPort = Number(process.env.MERCHANT_ADMIN_PORT || 6001);
+        const stripped = pathname === '/admin' ? '/' : (pathname.slice('/admin'.length) || '/');
+        const targetPath = stripped + (url.search || '');
+        const adminHeaders = { ...req.headers, host: `localhost:${adminPort}` };
+        delete adminHeaders.authorization; // Basic creds are for this gate only; admin injects its own server-side key downstream.
+        const proxyReq = http.request({
+          hostname: '127.0.0.1',
+          port: adminPort,
+          path: targetPath,
+          method: req.method,
+          headers: adminHeaders
+        }, (proxyRes) => {
+          res.writeHead(proxyRes.statusCode, proxyRes.headers);
+          proxyRes.pipe(res);
+        });
+        proxyReq.on('error', (err) => {
+          if (!res.headersSent) {
+            res.writeHead(502, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Merchant Admin unavailable', details: err.message }));
+          }
+        });
+        req.pipe(proxyReq);
+        return;
       }
 
       // REVERSE PROXY: /checkout/* and /icons/* -> Checkout Portal (Port 7000)

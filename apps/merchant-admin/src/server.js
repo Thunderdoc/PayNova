@@ -40,9 +40,12 @@ export class AdminServer {
     } catch {}
 
     let html = this.template;
-    // Always use empty string '' so client fetch calls hit the merchant admin's own /api proxy!
-    // This completely eliminates CORS errors, tunnel downtime 530s, and cross-origin failures.
-    const clientApiBase = '';
+    // Default '' so client calls hit the merchant admin's own /api proxy
+    // (this eliminates CORS errors, tunnel downtime 530s, and cross-origin
+    // failures). When the admin page is mounted under a path prefix on a
+    // public host (e.g. /admin on the demo store), set ADMIN_API_BASE to
+    // that prefix so every fetch/download link goes through the mount.
+    const clientApiBase = process.env.ADMIN_API_BASE || '';
     html = html.replaceAll('{{API_BASE_URL}}', clientApiBase);
     return html;
   }
