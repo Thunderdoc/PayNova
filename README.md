@@ -461,7 +461,7 @@ PayNova confirms payments without expensive commercial banking APIs using a trip
                        SUCCESS CONFIRMED
 ```
 
-1. **Android Observer App:** Install [`apps/android-observer-app/youpi-sms-gateway.apk`](apps/android-observer-app/youpi-sms-gateway.apk) on any secondary Android smartphone with the receiving bank SIM. Scan the pairing QR code in Merchant Admin to establish an encrypted HMAC link.
+1. **Android Observer App:** Install [`apps/android-observer-app/paynova-observer.apk`](apps/android-observer-app/paynova-observer.apk) on any secondary Android smartphone with the receiving bank SIM. Scan the pairing QR code in Merchant Admin to establish an encrypted HMAC link.
 2. **Gmail Observer:** Connect your bank-registered Google account using standard OAuth2 credentials.
 3. **Google Messages Web Observer:** Pairs via headless Chrome DevTools Protocol to observe cellular SMS through Google Messages Web.
 

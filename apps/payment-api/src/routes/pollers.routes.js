@@ -507,13 +507,13 @@ export function registerPollerRoutes(server, ctx) {
     HttpServer.json(res, 200, { success: true, message: 'Device unlinked.' });
   });
 
-  // GET /api/v1/admin/sms-gateway/download-apk & GET /youpi-sms-gateway.apk
+  // GET /api/v1/admin/sms-gateway/download-apk & GET /paynova-observer.apk
   const serveApk = async (req, res) => {
     const apkLocations = [
-      path.resolve(__dirname, '../../public/youpi-sms-gateway.apk'),
-      path.resolve(__dirname, '../../../merchant-admin/public/youpi-sms-gateway.apk'),
-      path.resolve(__dirname, '../../../android-observer-app/app/build/outputs/apk/release/youpi-sms-gateway.apk'),
-      path.resolve(__dirname, '../../../android-observer-app/youpi-sms-gateway.apk')
+      path.resolve(__dirname, '../../public/paynova-observer.apk'),
+      path.resolve(__dirname, '../../../merchant-admin/public/paynova-observer.apk'),
+      path.resolve(__dirname, '../../../android-observer-app/app/build/outputs/apk/release/paynova-observer.apk'),
+      path.resolve(__dirname, '../../../android-observer-app/paynova-observer.apk')
     ];
 
     let foundPath = null;
@@ -534,7 +534,7 @@ export function registerPollerRoutes(server, ctx) {
     const stat = fs.statSync(foundPath);
     res.writeHead(200, {
       'Content-Type': 'application/vnd.android.package-archive',
-      'Content-Disposition': 'attachment; filename="youpi-sms-gateway.apk"',
+      'Content-Disposition': 'attachment; filename="paynova-observer.apk"',
       'Content-Length': stat.size,
       'Access-Control-Allow-Origin': '*'
     });
@@ -542,5 +542,5 @@ export function registerPollerRoutes(server, ctx) {
   };
 
   server.get('/api/v1/admin/sms-gateway/download-apk', serveApk);
-  server.get('/youpi-sms-gateway.apk', serveApk);
+  server.get('/paynova-observer.apk', serveApk);
 }

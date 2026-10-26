@@ -651,16 +651,16 @@ export class AdminServer {
       }
 
       // Download Android Companion APK
-      if (pathname === '/youpi-sms-gateway.apk' || pathname === '/api/v1/admin/sms-gateway/download-apk') {
+      if (pathname === '/paynova-observer.apk' || pathname === '/api/v1/admin/sms-gateway/download-apk') {
         if (pathname.startsWith('/api/') && !this.isAdminRequestAuthorized(req)) {
           res.writeHead(process.env.ADMIN_API_KEY ? 401 : 503, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: process.env.ADMIN_API_KEY ? 'Admin authentication required.' : 'Admin API is not configured for secure access.' }));
           return;
         }
         const apkCandidates = [
-          path.resolve(__dirname, '../public/youpi-sms-gateway.apk'),
-          path.resolve(__dirname, '../../payment-api/public/youpi-sms-gateway.apk'),
-          path.resolve(__dirname, '../../android-observer-app/youpi-sms-gateway.apk')
+          path.resolve(__dirname, '../public/paynova-observer.apk'),
+          path.resolve(__dirname, '../../payment-api/public/paynova-observer.apk'),
+          path.resolve(__dirname, '../../android-observer-app/paynova-observer.apk')
         ];
         let apkPath = null;
         for (const p of apkCandidates) {
@@ -673,7 +673,7 @@ export class AdminServer {
           const stat = fs.statSync(apkPath);
           res.writeHead(200, {
             'Content-Type': 'application/vnd.android.package-archive',
-            'Content-Disposition': 'attachment; filename="youpi-sms-gateway.apk"',
+            'Content-Disposition': 'attachment; filename="paynova-observer.apk"',
             'Content-Length': stat.size,
             'Access-Control-Allow-Origin': '*'
           });
