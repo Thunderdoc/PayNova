@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <!-- OFFICIAL PayNova UNIVERSAL INTEGRATION SCRIPT -->
   <script src="/paynova.js" data-paynova-key="00000000-0000-0000-0000-000000000001" data-currency="INR"></script>
+  <!-- MANUAL-ONLY THEME: apply the saved choice before paint (no flash). The theme changes only via the header toggle. -->
+  <script>(function () { try { if (localStorage.getItem('paynova-theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) { } })();</script>
 
   <style>
     :root {
@@ -182,6 +184,115 @@
     .btn-admin-link:hover {
       background: #e2e8f0;
       border-color: var(--border-hover);
+    }
+
+    /* --- HEADER LOGIN BUTTONS (always visible, incl. mobile nav wrap) --- */
+    .btn-login-primary {
+      background: #0b63e5;
+      border-color: #0b63e5;
+      color: #ffffff;
+    }
+    .btn-login-primary:hover {
+      background: #0957cb;
+      border-color: #0957cb;
+    }
+    .btn-login-outline {
+      background: transparent;
+      border-color: #bfdbfe;
+      color: #0b63e5;
+    }
+    .btn-login-outline:hover {
+      background: #eff6ff;
+      border-color: #93c5fd;
+    }
+
+    /* --- MANUAL DARK MODE (applies ONLY under [data-theme="dark"]; light mode is untouched) --- */
+    html[data-theme="dark"] {
+      --bg: #0b1120;
+      --bg-card: #0f172a;
+      --bg-card-subtle: #131d35;
+      --border: #1e293b;
+      --border-hover: #334155;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --text-heading: #ffffff;
+      --primary-light: #12294d;
+      --primary-border: #1e3a8a;
+      --success-light: #052e22;
+      --success-border: #065f46;
+      --amber-light: #2a1c05;
+      --amber-border: #92400e;
+      --danger-light: #2a0a0a;
+      --danger-border: #7f1d1d;
+    }
+    html[data-theme="dark"] header {
+      background: #0b1120;
+    }
+    html[data-theme="dark"] .btn-admin-link {
+      background: #1e293b;
+      border-color: #334155;
+      color: #f1f5f9;
+    }
+    html[data-theme="dark"] .btn-admin-link:hover {
+      background: #334155;
+    }
+    html[data-theme="dark"] .btn-login-primary {
+      background: #0b63e5;
+      border-color: #0b63e5;
+      color: #ffffff;
+    }
+    html[data-theme="dark"] .btn-login-primary:hover {
+      background: #0957cb;
+    }
+    html[data-theme="dark"] .btn-login-outline {
+      background: transparent;
+      border-color: #334155;
+      color: #93c5fd;
+    }
+    html[data-theme="dark"] .btn-login-outline:hover {
+      background: #1e293b;
+    }
+    html[data-theme="dark"] .buy-box-card,
+    html[data-theme="dark"] .chip-btn,
+    html[data-theme="dark"] .custom-input-wrap,
+    html[data-theme="dark"] .req-card,
+    html[data-theme="dark"] .quad-card,
+    html[data-theme="dark"] .comparison-card,
+    html[data-theme="dark"] .celebration-card,
+    html[data-theme="dark"] .gallery-main-viewport {
+      background: #0f172a;
+    }
+    html[data-theme="dark"] .buy-box-card {
+      border-color: #1e3a8a;
+    }
+    html[data-theme="dark"] .comparison-table th {
+      background: var(--bg-card-subtle);
+    }
+    /* These two blocks carry inline background styles, so dark needs !important here only. */
+    html[data-theme="dark"] section.specs-section,
+    html[data-theme="dark"] .security-checklist-block {
+      background: #0f172a !important;
+    }
+
+    /* --- PREMIUM POLISH (hover-only: static light look is unchanged) --- */
+    .buy-box-card {
+      transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .buy-box-card:hover {
+      box-shadow: var(--shadow-lg);
+      border-color: #93c5fd;
+    }
+    .quad-card,
+    .req-card,
+    .comparison-card {
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .quad-card:hover,
+    .req-card:hover,
+    .comparison-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
     }
 
     /* --- MAIN PDP CONTAINER --- */
@@ -985,6 +1096,10 @@
         <a href="#developer-guide" class="btn-admin-link" style="background:#eff6ff; color:#2563eb; border-color:#bfdbfe;">📖 Developer Guide</a>
         <a href="/openapi.yaml" target="_blank" class="btn-admin-link">⚙️ OpenAPI</a>
         <a href="/wallet" class="btn-admin-link" style="background:#1e293b; color:#ffffff; border-color:#334155;">🪙 Wallet (<span id="topWalletBalance">50</span>)</a>
+        <a href="/merchant/login" class="btn-admin-link btn-login-primary">👤 Merchant Login</a>
+        <a href="/merchant/register" class="btn-admin-link btn-login-outline">📝 Register</a>
+        <a href="/admin" class="btn-admin-link btn-login-outline">🛡️ Admin</a>
+        <button type="button" class="btn-admin-link" id="themeToggle" onclick="togglePaynovaTheme()" title="Toggle dark / light mode" aria-label="Toggle dark mode"><span id="themeToggleIcon">🌙</span></button>
       </nav>
     </div>
   </header>
@@ -1957,6 +2072,25 @@ app.post('/api/paynova-webhook', express.raw({ type: 'application/json' }), (req
         closeOutcomeModal();
       }
     });
+
+    // --- MANUAL-ONLY THEME (key "paynova-theme", shared across PayNova pages on this host) ---
+    function applyPaynovaTheme(theme) {
+      var t = theme === 'dark' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+      var icon = document.getElementById('themeToggleIcon');
+      if (icon) icon.textContent = t === 'dark' ? '☀️' : '🌙';
+    }
+    function togglePaynovaTheme() {
+      var cur = document.documentElement.getAttribute('data-theme') || 'light';
+      var next = cur === 'dark' ? 'light' : 'dark';
+      try { localStorage.setItem('paynova-theme', next); } catch (e) { }
+      applyPaynovaTheme(next);
+    }
+    (function initPaynovaTheme() {
+      var saved = null;
+      try { saved = localStorage.getItem('paynova-theme'); } catch (e) { }
+      applyPaynovaTheme(saved === 'dark' ? 'dark' : 'light');
+    })();
 
     // Initialize UI on load
     updateAmountUI();

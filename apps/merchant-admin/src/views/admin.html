@@ -693,6 +693,50 @@
       color: var(--btn-sec-hover-text);
     }
 
+    /* --- APK DOWNLOAD PRESENTATION (visual only; URLs/filenames unchanged) --- */
+    .apk-download-btn {
+      padding: 0.85rem 1.4rem;
+      font-size: 0.95rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 6px 18px var(--success-glow);
+    }
+    .apk-download-btn:hover {
+      transform: translateY(-1px);
+    }
+    .apk-steps {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .apk-step {
+      flex: 1;
+      min-width: 130px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 0.7rem 0.8rem;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: var(--text-muted);
+    }
+    .apk-step strong {
+      display: block;
+      color: var(--text-heading);
+      font-size: 0.82rem;
+      margin-bottom: 0.2rem;
+    }
+
+    /* --- FOCUS VISIBILITY (keyboard users; visual only) --- */
+    .btn:focus-visible,
+    .main-nav-btn:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
     .btn:disabled {
       opacity: 0.55;
       cursor: not-allowed;
@@ -1011,7 +1055,7 @@
     <div class="header-quick-stats">
       <!-- Real Light / Dark Mode Toggle Pill -->
       <div class="theme-mode-pill" id="headerThemeBadge" onclick="toggleThemeManual()"
-        title="Auto-switches to Dark Mode in Developer Hub and Bright White Mode in Operations &amp; Store Settings. Click to toggle manually anytime.">
+        title="Click to toggle between Bright White and Real Dark mode. Your choice is remembered on this device.">
         <span id="headerThemeIcon">☀️</span>
         <span id="headerThemeText">Bright White</span>
       </div>
@@ -1328,10 +1372,15 @@
                 onclick="copySmsToken()">📋 Copy</button>
             </div>
             <div style="display:flex; gap:0.5rem;">
-              <a class="btn btn-success" href="{{API_BASE_URL}}/youpi-sms-gateway.apk" download="youpi-sms-gateway.apk">📲 Download
+              <a class="btn btn-success apk-download-btn" href="{{API_BASE_URL}}/youpi-sms-gateway.apk" download="youpi-sms-gateway.apk">📲 Download
                 Companion APK</a>
               <button class="btn btn-secondary" onclick="switchSection('developerHub', 'subViewDevAndroid')">Configure
                 Pairing ↗</button>
+            </div>
+            <div class="apk-steps">
+              <div class="apk-step"><strong>1 · Install</strong>Install the APK on the bank-linked phone and grant notification access.</div>
+              <div class="apk-step"><strong>2 · Pair</strong>Scan the pairing QR in Developer Hub → Android Observer, or enter the enrollment secret.</div>
+              <div class="apk-step"><strong>3 · Stay live</strong>Keep the app running so it sends heartbeats and forwards parsed bank-credit events.</div>
             </div>
           </div>
 
@@ -2984,7 +3033,7 @@
             </div>
             <div style="display:flex; justify-content:center; gap:0.5rem;">
               <button class="btn btn-secondary" onclick="fetchSmsPairQr()">🔄 Refresh QR</button>
-              <a class="btn btn-success" href="{{API_BASE_URL}}/youpi-sms-gateway.apk" download="youpi-sms-gateway.apk">📲 Download
+              <a class="btn btn-success apk-download-btn" href="{{API_BASE_URL}}/youpi-sms-gateway.apk" download="youpi-sms-gateway.apk">📲 Download
                 Android APK</a>
             </div>
           </div>
@@ -3623,29 +3672,17 @@
         .replace(/'/g, '&#039;');
     }
 
-    // --- REAL LIGHT / DARK THEME CONTROLLER ---
-    let manualThemeOverride = null;
-
-    function updateThemeForSection(sectionId) {
-      if (manualThemeOverride !== null) {
-        applyTheme(manualThemeOverride);
-        return;
-      }
-      // Automatically real dark mode in developer settings, bright white mode in operations & store settings
-      if (sectionId === 'developerHub') {
-        applyTheme('dark');
-      } else {
-        applyTheme('light');
-      }
-    }
-
+    // --- MANUAL-ONLY LIGHT / DARK THEME CONTROLLER ---
+    // The theme NEVER changes on navigation: only the header toggle below
+    // changes it, and the choice persists in localStorage ("paynova-theme").
     function applyTheme(theme) {
-      document.documentElement.setAttribute('data-theme', theme);
-      document.body.setAttribute('data-theme', theme);
+      const t = theme === 'dark' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+      document.body.setAttribute('data-theme', t);
 
       const icon = document.getElementById('headerThemeIcon');
       const text = document.getElementById('headerThemeText');
-      if (theme === 'dark') {
+      if (t === 'dark') {
         if (icon) icon.textContent = '🌙';
         if (text) text.textContent = 'Real Dark';
       } else {
@@ -3657,16 +3694,24 @@
     function toggleThemeManual() {
       const current = document.documentElement.getAttribute('data-theme') || 'light';
       const next = current === 'dark' ? 'light' : 'dark';
-      manualThemeOverride = next;
+      try { localStorage.setItem('paynova-theme', next); } catch (e) { }
       applyTheme(next);
       showAdminToast(`Switched to ${next === 'dark' ? 'Real Dark Mode' : 'Bright White Mode'}`);
     }
 
+    // Apply the saved choice on load (default: light). Runs after the
+    // header exists because this script sits below the page markup.
+    (function initPaynovaTheme() {
+      let saved = null;
+      try { saved = localStorage.getItem('paynova-theme'); } catch (e) { }
+      applyTheme(saved === 'dark' ? 'dark' : 'light');
+    })();
+
     // --- NAVIGATION CONTROLLER: 3 HIGH-LEVEL SECTIONS ---
     function switchSection(sectionId, targetSubTab = null) {
       activeSection = sectionId;
-      manualThemeOverride = null; // Auto-switching restores when navigating tabs
-      updateThemeForSection(sectionId);
+      // NOTE: switching sections must never change the theme. The theme
+      // changes only via the header toggle (toggleThemeManual).
 
       // Sync URL hash without jumping
       try {

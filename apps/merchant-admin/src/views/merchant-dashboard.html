@@ -6,14 +6,18 @@
 <title>Merchant Dashboard · PayNova</title>
 <style>
   body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#0f172a}
-  header{background:linear-gradient(135deg,#0ea5e9,#0b63e5);color:#fff;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  header{background:linear-gradient(135deg,#0ea5e9,#0b63e5);color:#fff;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:0 4px 16px rgba(11,99,229,.25)}
+  header button:hover{filter:brightness(1.05)}
+  footer{max-width:960px;margin:0 auto;padding:8px 24px 28px;color:#64748b;font-size:13px;text-align:center}
   .brand{display:flex;align-items:center;gap:12px}
   .shield{width:44px;height:50px;background:rgba(255,255,255,.2);border-radius:8px 8px 16px 16px;display:grid;place-items:center;font-weight:900;font-size:22px}
   header h1{margin:0;font-size:20px}
   header p{margin:2px 0 0;opacity:.85;font-size:13px}
   header button{background:#fff;color:#0b63e5;border:none;border-radius:10px;padding:10px 18px;font-weight:800;cursor:pointer}
   main{max-width:960px;margin:0 auto;padding:24px}
-  section{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;margin-bottom:20px}
+  section{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+  tbody tr:hover{background:#f8fafc}
+  .empty{padding:14px 12px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;text-align:center}
   section h2{margin:0 0 14px;font-size:17px}
   table{width:100%;border-collapse:collapse;font-size:14px}
   th,td{text-align:left;padding:9px 8px;border-bottom:1px solid #f1f5f9}
@@ -22,7 +26,10 @@
   label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}
   input{width:100%;padding:10px 12px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:14px;box-sizing:border-box}
   input:focus{outline:none;border-color:#0b63e5;box-shadow:0 0 0 3px #bfdbfe}
-  .btn{background:#0b63e5;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-weight:700;cursor:pointer;margin-top:14px}
+  .btn{background:#0b63e5;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-weight:700;cursor:pointer;margin-top:14px;transition:background .15s,box-shadow .15s}
+  .btn:hover{background:#0957cb;box-shadow:0 4px 14px rgba(11,99,229,.3)}
+  .btn-outline:hover{background:#eff6ff}
+  button:focus-visible,.btn:focus-visible,input:focus-visible{outline:2px solid #0b63e5;outline-offset:2px}
   .btn-sm{padding:6px 12px;font-size:13px;margin:0}
   .btn-outline{background:#fff;color:#0b63e5;border:1.5px solid #bfdbfe}
   .err{display:none;margin:14px 0 0;padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:10px;font-size:14px}
@@ -30,7 +37,22 @@
   .acct{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;flex-wrap:wrap}
   .badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#dcfce7;color:#166534}
   .badge.off{background:#f1f5f9;color:#64748b}
+  /* MANUAL DARK MODE (applies ONLY under [data-theme="dark"]; light mode is untouched) */
+  html[data-theme="dark"] body{background:#0b1120;color:#f1f5f9}
+  html[data-theme="dark"] section{background:#0f172a;border-color:#1e293b}
+  html[data-theme="dark"] th,html[data-theme="dark"] td{border-color:#1e293b}
+  html[data-theme="dark"] th,html[data-theme="dark"] .muted{color:#94a3b8}
+  html[data-theme="dark"] input{background:#0b1120;border-color:#334155;color:#f1f5f9}
+  html[data-theme="dark"] input:focus{border-color:#0b63e5;box-shadow:0 0 0 3px #1e3a8a}
+  html[data-theme="dark"] .btn-outline{background:#1e293b;color:#93c5fd;border-color:#334155}
+  html[data-theme="dark"] .badge.off{background:#1e293b;color:#94a3b8}
+  html[data-theme="dark"] .acct{border-color:#1e293b}
+  html[data-theme="dark"] section{box-shadow:0 1px 3px rgba(0,0,0,.35)}
+  html[data-theme="dark"] tbody tr:hover{background:#131d35}
+  html[data-theme="dark"] .empty{background:#131d35;border-color:#334155}
+  html[data-theme="dark"] footer{color:#94a3b8}
 </style>
+<script>(function () { try { if (localStorage.getItem('paynova-theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) { } })();</script>
 </head>
 <body>
 <header>
@@ -41,7 +63,10 @@
       <p id="userLine">Loading…</p>
     </div>
   </div>
-  <button type="button" id="logoutBtn">Logout</button>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <button type="button" id="themeToggle" onclick="togglePaynovaTheme()" title="Toggle dark / light mode" aria-label="Toggle dark mode"><span id="themeToggleIcon">🌙</span></button>
+    <button type="button" id="logoutBtn">Logout</button>
+  </div>
 </header>
 <main>
   <div class="err" id="pageErr"></div>
@@ -80,6 +105,7 @@
     </form>
   </section>
 </main>
+<footer>© 2026 PAYNOVA · Secure payment processing</footer>
 <script>
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -108,7 +134,7 @@
   async function loadPayments() {
     const data = await api('/merchant/api/payments');
     if (!data.payments.length) {
-      $('paymentsWrap').innerHTML = '<span class="muted">No payments yet.</span>';
+      $('paymentsWrap').innerHTML = '<div class="empty muted">No payments yet.</div>';
       return;
     }
     $('paymentsWrap').innerHTML = '<table><thead><tr><th>Order</th><th>Amount</th><th>Status</th><th>Method</th><th>Date</th></tr></thead><tbody>'
@@ -119,7 +145,7 @@
   async function loadAccounts() {
     const data = await api('/merchant/api/accounts');
     if (!data.accounts.length) {
-      $('accountsWrap').innerHTML = '<span class="muted">No receiving accounts yet. Add your UPI ID below.</span>';
+      $('accountsWrap').innerHTML = '<div class="empty muted">No receiving accounts yet. Add your UPI ID below.</div>';
       return;
     }
     $('accountsWrap').innerHTML = data.accounts.map((a) => '<div class="acct"><div><strong>' + esc(a.upiId) + '</strong> · ' + esc(a.payeeName)
@@ -191,6 +217,26 @@
         $('pageErr').style.display = 'block';
       }
     }
+  })();
+</script>
+<script>
+  // MANUAL-ONLY THEME (key "paynova-theme", shared across PayNova pages on this host)
+  (function () {
+    function applyPaynovaTheme(theme) {
+      var t = theme === 'dark' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+      var icon = document.getElementById('themeToggleIcon');
+      if (icon) icon.textContent = t === 'dark' ? '☀️' : '🌙';
+    }
+    window.togglePaynovaTheme = function () {
+      var cur = document.documentElement.getAttribute('data-theme') || 'light';
+      var next = cur === 'dark' ? 'light' : 'dark';
+      try { localStorage.setItem('paynova-theme', next); } catch (e) { }
+      applyPaynovaTheme(next);
+    };
+    var saved = null;
+    try { saved = localStorage.getItem('paynova-theme'); } catch (e) { }
+    applyPaynovaTheme(saved === 'dark' ? 'dark' : 'light');
   })();
 </script>
 </body>

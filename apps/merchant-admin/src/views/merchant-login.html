@@ -18,9 +18,20 @@
   .err{display:none;margin-top:14px;padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:10px;font-size:14px}
   .foot{text-align:center;margin-top:18px;font-size:14px;color:#64748b}
   .foot a{color:#0b63e5;font-weight:700;text-decoration:none}
+  .theme-toggle{position:fixed;top:16px;right:16px;z-index:10;width:44px;height:44px;margin-top:0;padding:0;border-radius:50%;border:1.5px solid #cbd5e1;background:#fff;color:#0f172a;font-size:19px;cursor:pointer;box-shadow:0 4px 14px rgba(11,99,229,.15);line-height:1}
+  /* MANUAL DARK MODE (applies ONLY under [data-theme="dark"]; light mode is untouched) */
+  html[data-theme="dark"] body{background:#0b1120;color:#f1f5f9}
+  html[data-theme="dark"] main{background:#0f172a;border-color:#1e293b;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+  html[data-theme="dark"] p.sub,html[data-theme="dark"] .foot{color:#94a3b8}
+  html[data-theme="dark"] input{background:#0b1120;border-color:#334155;color:#f1f5f9}
+  html[data-theme="dark"] input:focus{border-color:#0b63e5;box-shadow:0 0 0 3px #1e3a8a}
+  html[data-theme="dark"] .theme-toggle{background:#1e293b;border-color:#334155;color:#f1f5f9}
+  html[data-theme="dark"] .foot a{color:#93c5fd}
 </style>
+<script>(function () { try { if (localStorage.getItem('paynova-theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) { } })();</script>
 </head>
 <body>
+<button type="button" class="theme-toggle" id="themeToggle" onclick="togglePaynovaTheme()" title="Toggle dark / light mode" aria-label="Toggle dark mode"><span id="themeToggleIcon">🌙</span></button>
 <main>
   <div class="shield">P</div>
   <h1>Merchant Login</h1>
@@ -62,6 +73,26 @@
       btn.textContent = 'Login';
     }
   });
+</script>
+<script>
+  // MANUAL-ONLY THEME (key "paynova-theme", shared across PayNova pages on this host)
+  (function () {
+    function applyPaynovaTheme(theme) {
+      var t = theme === 'dark' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+      var icon = document.getElementById('themeToggleIcon');
+      if (icon) icon.textContent = t === 'dark' ? '☀️' : '🌙';
+    }
+    window.togglePaynovaTheme = function () {
+      var cur = document.documentElement.getAttribute('data-theme') || 'light';
+      var next = cur === 'dark' ? 'light' : 'dark';
+      try { localStorage.setItem('paynova-theme', next); } catch (e) { }
+      applyPaynovaTheme(next);
+    };
+    var saved = null;
+    try { saved = localStorage.getItem('paynova-theme'); } catch (e) { }
+    applyPaynovaTheme(saved === 'dark' ? 'dark' : 'light');
+  })();
 </script>
 </body>
 </html>

@@ -92,7 +92,10 @@ class MainActivity : AppCompatActivity() {
         }
         tvStatus.textSize = 15f
         tvStatus.minHeight = 100
-        layout.addView(tvStatus)
+        layout.addView(tvStatus, android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { bottomMargin = 16 })
 
         tvDeviceId = TextView(this).apply {
             text = "DEVICE\nAndroid • ${android.os.Build.MODEL}"
@@ -103,17 +106,25 @@ class MainActivity : AppCompatActivity() {
         }
         tvDeviceId.textSize = 14f
         tvDeviceId.minHeight = 78
-        layout.addView(tvDeviceId)
+        layout.addView(tvDeviceId, android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { bottomMargin = 20 })
 
         btnPermission = Button(this).apply {
             text = "Grant Notification Listener Access"
             setTextColor(android.graphics.Color.WHITE)
             background = roundedButton("#16325F")
+            minHeight = 64
+            isAllCaps = false
             setOnClickListener {
                 startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
             }
         }
-        layout.addView(btnPermission)
+        layout.addView(btnPermission, android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { bottomMargin = 24 })
 
         pairingTitle = TextView(this).apply {
             text = "PAIR WITH QR CODE\nScan the pairing QR from the PayNova dashboard to connect this device."
@@ -122,7 +133,10 @@ class MainActivity : AppCompatActivity() {
             setPadding(24, 24, 24, 12)
             background = roundedCard("#0B1D3B", "#173F76")
         }
-        layout.addView(pairingTitle)
+        layout.addView(pairingTitle, android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { bottomMargin = 16 })
 
         val btnScanQr = Button(this).apply {
             text = "▣  SCAN PAIRING QR"
@@ -139,7 +153,10 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        layout.addView(btnScanQr)
+        layout.addView(btnScanQr, android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { bottomMargin = 20 })
 
         val manualTitle = TextView(this).apply {
             text = "MANUAL CONNECTION\nUse this only if QR scanning is unavailable."
@@ -152,23 +169,31 @@ class MainActivity : AppCompatActivity() {
         etBaseUrl = EditText(this).apply {
             hint = "Gateway URL (e.g. http://192.168.1.100:6100)"
             setText(apiClient.getBaseUrl())
+            textSize = 15f
             setTextColor(android.graphics.Color.WHITE)
             setHintTextColor(android.graphics.Color.parseColor("#7186A8"))
             background = roundedInput()
             setPadding(18, 12, 18, 12)
             minHeight = 58
         }
-        layout.addView(etBaseUrl)
+        layout.addView(etBaseUrl, android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { bottomMargin = 12 })
 
         etToken = EditText(this).apply {
             hint = "Enrollment Token"
+            textSize = 15f
             setTextColor(android.graphics.Color.WHITE)
             setHintTextColor(android.graphics.Color.parseColor("#7186A8"))
             background = roundedInput()
             setPadding(18, 12, 18, 12)
             minHeight = 58
         }
-        layout.addView(etToken)
+        layout.addView(etToken, android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { bottomMargin = 20 })
 
         btnPair = Button(this).apply {
             text = "Pair with Merchant Gateway"

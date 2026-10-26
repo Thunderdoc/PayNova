@@ -5,6 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{MERCHANT_NAME}} · {{APP_NAME}} Checkout</title>
+  <!-- MANUAL-ONLY THEME: apply the saved choice before paint (no flash). The theme changes only via the header toggle. -->
+  <script>(function () { try { if (localStorage.getItem('paynova-theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) { } })();</script>
   <style>
     :root {
       --ypg-blue: #0b63e5;
@@ -3777,6 +3779,49 @@
         color: #10234d !important;
       }
     }
+
+    /* --- MANUAL DARK MODE (applies ONLY under [data-theme="dark"]; light mode is untouched) --- */
+    html[data-theme="dark"] {
+      --ypg-bg: #0b1120;
+      --ypg-card: #0f172a;
+      --ypg-text-dark: #f1f5f9;
+      --ypg-text-muted: #94a3b8;
+      --ypg-border: #1e293b;
+      --ypg-border-light: #1e293b;
+      --ypg-offer-bg: #12294d;
+      --ypg-offer-border: #1e3a8a;
+      --ypg-green-bg: #052e22;
+    }
+    html[data-theme="dark"] .ypg-body,
+    html[data-theme="dark"] .ypg-pc-topbar,
+    html[data-theme="dark"] .ypg-pc-workspace,
+    html[data-theme="dark"] .ypg-pc-columns {
+      background: #0b1120;
+    }
+    html[data-theme="dark"] .ypg-pc-topbar {
+      border-color: #1e293b;
+    }
+    html[data-theme="dark"] .ypg-pc-topbar-title {
+      color: #f1f5f9;
+    }
+    html[data-theme="dark"] .ypg-pc-btn-more,
+    html[data-theme="dark"] .ypg-pc-btn-close {
+      color: #94a3b8;
+    }
+    html[data-theme="dark"] .ypg-pc-active-view {
+      background: #0f172a !important;
+      border-color: #1e293b !important;
+    }
+    html[data-theme="dark"] .ypg-page-title {
+      color: #f1f5f9 !important;
+    }
+    html[data-theme="dark"] .ypg-offers-pill:hover {
+      background: #1e293b;
+    }
+    html[data-theme="dark"] .ypg-account-popover {
+      background: #0f172a;
+      border-color: #1e293b;
+    }
   </style>
 </head>
 
@@ -4043,6 +4088,7 @@
       <div class="ypg-pc-topbar">
         <div class="ypg-pc-topbar-title">Payment Options</div>
         <div class="ypg-pc-topbar-actions" style="position: relative;">
+          <button type="button" class="ypg-pc-btn-more" onclick="togglePaynovaTheme()" title="Toggle dark / light mode" aria-label="Toggle dark mode"><span class="paynova-theme-toggle-icon">🌙</span></button>
           <button type="button" class="ypg-pc-btn-more" id="btnPcMore" onclick="toggleAccountMenu(event)" title="Options">•••</button>
           <button type="button" class="ypg-pc-btn-close" onclick="openCancelPaymentModal()"
             title="Close Checkout">✕</button>
@@ -4098,6 +4144,10 @@
               </div>
             </div>
           </div>
+
+          <!-- Manual dark / light toggle (mobile header) -->
+          <button type="button" class="ypg-btn-profile" onclick="togglePaynovaTheme()"
+            title="Toggle dark / light mode" aria-label="Toggle dark mode"><span class="paynova-theme-toggle-icon">🌙</span></button>
 
           <!-- Right Profile Button (Toggles User Details Popover) -->
           <button type="button" class="ypg-btn-profile" id="btnProfileMenu" onclick="toggleAccountMenu(event)"
@@ -8297,6 +8347,29 @@
     function openSecurityInfoModal() {
       alert("🔒 Secure Payment Verification\n\n• Payment status is confirmed by the gateway backend.\n• Bank observations are reconciled before success is shown.\n• Your payment credentials are not collected by this checkout.");
     }
+  </script>
+  <script>
+    // MANUAL-ONLY THEME (key "paynova-theme", shared across PayNova pages on this host).
+    // Nothing else on this page changes the theme: no navigation, section, or
+    // branding code touches data-theme.
+    (function () {
+      function applyPaynovaTheme(theme) {
+        var t = theme === 'dark' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+        document.querySelectorAll('.paynova-theme-toggle-icon').forEach(function (el) {
+          el.textContent = t === 'dark' ? '☀️' : '🌙';
+        });
+      }
+      window.togglePaynovaTheme = function () {
+        var cur = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = cur === 'dark' ? 'light' : 'dark';
+        try { localStorage.setItem('paynova-theme', next); } catch (e) { }
+        applyPaynovaTheme(next);
+      };
+      var saved = null;
+      try { saved = localStorage.getItem('paynova-theme'); } catch (e) { }
+      applyPaynovaTheme(saved === 'dark' ? 'dark' : 'light');
+    })();
   </script>
 </body>
 
