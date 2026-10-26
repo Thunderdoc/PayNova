@@ -114,7 +114,7 @@ flowchart TB
     end
 
     BuyerBrowser -->|Interacts with| CheckoutPortal
-    MerchantStore -->|SDK Embed / youpi.js| CheckoutPortal
+    MerchantStore -->|SDK Embed / paynova.js| CheckoutPortal
     CashierPOS -->|Approves Till Cash/Card| AdminDashboard
 
     CheckoutPortal -->|REST & SSE Stream| APIEndpoints
@@ -258,16 +258,16 @@ graph TD
 
 ---
 
-### 4.5 Universal Merchant Integration (`youpi.js`)
+### 4.5 Universal Merchant Integration (`paynova.js`)
 
-PayNova distributes a single, framework-independent universal browser bundle: [`/youpi.js`](apps/checkout-portal/src/sdk/youpi.js).
+PayNova distributes a single, framework-independent universal browser bundle: [`/paynova.js`](apps/checkout-portal/src/sdk/paynova.js).
 
 #### 1. Zero-JS Declarative Button Embedding
 Merchants add the script and declarative attributes to any HTML button:
 ```html
-<script src="https://pay.yourdomain.com/youpi.js" data-youpi-key="MERCHANT_PUBLIC_KEY"></script>
+<script src="https://pay.yourdomain.com/paynova.js" data-paynova-key="MERCHANT_PUBLIC_KEY"></script>
 
-<button data-youpi-pay
+<button data-paynova-pay
         data-order-id="ORD-1001"
         data-amount="499.00"
         data-currency="INR">
@@ -275,10 +275,10 @@ Merchants add the script and declarative attributes to any HTML button:
 </button>
 ```
 
-#### 2. Programmatic Invocation (`Youpi.pay`)
+#### 2. Programmatic Invocation (`PayNova.pay`)
 For SPAs (React, Next.js, Vue, Nuxt, Angular):
 ```javascript
-window.Youpi.pay({
+window.PayNova.pay({
   checkoutUrl: session.checkoutUrl,
   order_id: 'ORD-1001',
   amount: 499.00,
@@ -294,6 +294,8 @@ window.Youpi.pay({
   }
 });
 ```
+
+> Legacy aliases (`youpi.js`, `data-youpi-pay`, `Youpi.pay`, `youpi:payment:*`) still work for existing integrations.
 
 #### 3. Standardized Browser DOM CustomEvents
 Driven directly on `window` for reactive UI animations:
@@ -314,9 +316,9 @@ Frontend browser events are never trusted for order fulfillment or provisioning 
 ```javascript
 import crypto from 'node:crypto';
 
-app.post('/api/youpi-webhook', express.raw({ type: 'application/json' }), (req, res) => {
+app.post('/api/paynova-webhook', express.raw({ type: 'application/json' }), (req, res) => {
   const signature = req.headers['x-gateway-signature'] || '';
-  const secret = process.env.YOUPI_WEBHOOK_SECRET;
+  const secret = process.env.PAYNOVA_WEBHOOK_SECRET;
   const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(req.body).digest('hex');
 
   if (signature.length !== expected.length ||

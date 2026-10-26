@@ -12,9 +12,9 @@ PayNova is a self-hosted, sovereign payment gateway designed for zero-fee UPI an
 ```
   [ Merchant Website / App ]
               │
-    (1) Adds one script: <script src=".../youpi.js" data-youpi-key="...">
+    (1) Adds one script: <script src=".../paynova.js" data-paynova-key="...">
               │
-    (2) Maps payment button: <button data-youpi-pay data-order-id="..." data-amount="...">
+    (2) Maps payment button: <button data-paynova-pay data-order-id="..." data-amount="...">
               │
     (3) PayNova JS dims/blurs background & renders centered responsive modal (or mobile sheet)
               │
@@ -53,7 +53,7 @@ Place the script tag in the page's HTML `<head>` or `<body>`:
 - In production, it is your canonical checkout portal domain (e.g., `https://pay.yourdomain.com`).
 
 ### Step 2: One-Button Zero-JS Configuration
-Tag any clickable button with `data-youpi-pay`:
+Tag any clickable button with `data-paynova-pay`:
 
 ```html
 <button 
@@ -169,7 +169,7 @@ import crypto from 'node:crypto';
 
 app.post('/api/webhook', express.raw({ type: 'application/json' }), (req, res) => {
   const signature = req.headers['x-gateway-signature'] || '';
-  const secret = process.env.YOUPI_WEBHOOK_SECRET;
+  const secret = process.env.PAYNOVA_WEBHOOK_SECRET;
   const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(req.body).digest('hex');
 
   if (signature.length !== expected.length ||
@@ -199,7 +199,7 @@ from fastapi import FastAPI, Request, HTTPException
 app = FastAPI()
 
 @app.post("/api/webhook")
-async def youpi_webhook(request: Request):
+async def paynova_webhook(request: Request):
     raw_body = await request.body()
     signature = request.headers.get("X-Gateway-Signature", "")
     secret = request.app.state.webhook_secret.encode("utf-8")
@@ -220,7 +220,7 @@ async def youpi_webhook(request: Request):
 <?php
 $rawPayload = file_get_contents('php://input');
 $signature = $_SERVER['HTTP_X_GATEWAY_SIGNATURE'] ?? '';
-$secret = getenv('YOUPI_WEBHOOK_SECRET');
+$secret = getenv('PAYNOVA_WEBHOOK_SECRET');
 
 $expected = 'sha256=' . hash_hmac('sha256', $rawPayload, $secret);
 
@@ -253,7 +253,7 @@ import (
 	"os"
 )
 
-func youpiWebhookHandler(w http.ResponseWriter, r *http.Request) {
+func paynovaWebhookHandler(w http.ResponseWriter, r *http.Request) {
 	rawBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Cannot read body", http.StatusBadRequest)
@@ -262,7 +262,7 @@ func youpiWebhookHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	signature := r.Header.Get("X-Gateway-Signature")
-	secret := []byte(os.Getenv("YOUPI_WEBHOOK_SECRET"))
+	secret := []byte(os.Getenv("PAYNOVA_WEBHOOK_SECRET"))
 
 	mac := hmac.New(sha256.New, secret)
 	mac.Write(rawBody)

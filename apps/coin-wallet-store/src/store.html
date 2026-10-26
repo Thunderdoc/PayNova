@@ -1660,7 +1660,7 @@ import crypto from 'node:crypto';
 
 app.post('/api/paynova-webhook', express.raw({ type: 'application/json' }), (req, res) => {
   const signature = req.headers['x-gateway-signature']; // 'sha256=...'
-  const webhookSecret = process.env.YOUPI_WEBHOOK_SECRET;
+  const webhookSecret = process.env.PAYNOVA_WEBHOOK_SECRET;
 
   // Verify HMAC-SHA256 signature
   const expectedHmac = crypto.createHmac('sha256', webhookSecret).update(req.body).digest('hex');
@@ -1788,7 +1788,7 @@ app.post('/api/paynova-webhook', express.raw({ type: 'application/json' }), (req
     </div>
   </div>
 
-  <!-- JAVASCRIPT: INTERACTIVE CONTROLLER & YOUPI CHECKOUT EMBED -->
+  <!-- JAVASCRIPT: INTERACTIVE CONTROLLER & PAYNOVA CHECKOUT EMBED -->
   <script>
     // --- STATE MANAGEMENT ---
     let currentAmount = 1.00;
@@ -1892,7 +1892,7 @@ app.post('/api/paynova-webhook', express.raw({ type: 'application/json' }), (req
       if (btnDisp) btnDisp.textContent = formatted;
     }
 
-    // --- PURCHASE INITIATION (Using Official Universal YouPI Integration) ---
+    // --- PURCHASE INITIATION (Using Official Universal PayNova Integration) ---
     async function startGatewayPurchase() {
       const btn = document.getElementById('btnInitiateCheckout');
       const oldHtml = btn.innerHTML;
@@ -1904,7 +1904,7 @@ app.post('/api/paynova-webhook', express.raw({ type: 'application/json' }), (req
         btn.setAttribute('data-amount', currentAmount.toFixed(2));
         btn.setAttribute('data-order-id', orderId);
 
-        // 1. Create order on store backend via YoupiPaymentClient
+        // 1. Create order on store backend via PayNovaPaymentClient
         const res = await fetch('/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

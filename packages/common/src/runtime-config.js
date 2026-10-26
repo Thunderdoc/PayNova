@@ -100,8 +100,8 @@ export function deriveCloudflareRoutes(config = {}) {
 export function resolveRuntimeUrls(options = {}) {
   let mode = options.envMode;
   if (!mode) {
-    if (process.env.YOUPI_MODE) {
-      mode = process.env.YOUPI_MODE;
+    if (process.env.PAYNOVA_MODE || process.env.YOUPI_MODE) {
+      mode = process.env.PAYNOVA_MODE || process.env.YOUPI_MODE;
     } else if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
       mode = 'localhost';
     } else if (process.env.CLOUDFLARE_DOMAIN) {
@@ -116,7 +116,7 @@ export function resolveRuntimeUrls(options = {}) {
 
   if (mode === 'production') {
     if (!domain) {
-      if ((process.env.NODE_ENV === 'test' || process.env.YOUPI_MODE === 'localhost') && options.envMode !== 'production') {
+      if ((process.env.NODE_ENV === 'test' || process.env.PAYNOVA_MODE === 'localhost' || process.env.YOUPI_MODE === 'localhost') && options.envMode !== 'production') {
         mode = 'localhost';
       } else {
         throw new Error('Production Configuration Incomplete: Cloudflare Domain is required when running in PRODUCTION mode.');

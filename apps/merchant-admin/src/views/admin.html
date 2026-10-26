@@ -1139,6 +1139,226 @@
     }
     [data-theme="light"] #subViewStoreBrand [style*="color:#ffffff"] { color: var(--text-heading) !important; }
     [data-theme="light"] #subViewStoreBrand [style*="color:#38bdf8"] { color: #0284c7 !important; }
+    /* REMAINING DEVELOPER HUB + SECURITY HISTORY: same dark-island rescue as
+       the simulator, scoped to these subviews. Dark theme keeps its
+       original look. Banners become flat light cards here (their dark
+       gradients are covered by the .card rule below). */
+    [data-theme="light"] #subViewDevSupervisor,
+    [data-theme="light"] #subViewDevCloudflare,
+    [data-theme="light"] #subViewDevAndroid,
+    [data-theme="light"] #subViewDevProtocols,
+    [data-theme="light"] #subViewSecHistory { color-scheme: light; }
+    [data-theme="light"] #subViewDevSupervisor .card,
+    [data-theme="light"] #subViewDevCloudflare .card,
+    [data-theme="light"] #subViewDevAndroid .card,
+    [data-theme="light"] #subViewDevProtocols .card,
+    [data-theme="light"] #subViewSecHistory .card {
+      background: var(--bg-card) !important;
+      border-color: var(--border) !important;
+    }
+    [data-theme="light"] #subViewDevSupervisor [style*="background:#0f172a"],
+    [data-theme="light"] #subViewDevCloudflare [style*="background:#0f172a"],
+    [data-theme="light"] #subViewDevAndroid [style*="background:#0f172a"],
+    [data-theme="light"] #subViewDevProtocols [style*="background:#0f172a"],
+    [data-theme="light"] #subViewSecHistory [style*="background:#0f172a"],
+    [data-theme="light"] #subViewDevSupervisor [style*="background:#0b0f19"],
+    [data-theme="light"] #subViewDevCloudflare [style*="background:#0b0f19"],
+    [data-theme="light"] #subViewDevAndroid [style*="background:#0b0f19"],
+    [data-theme="light"] #subViewDevProtocols [style*="background:#0b0f19"],
+    [data-theme="light"] #subViewSecHistory [style*="background:#0b0f19"] {
+      background: var(--bg-card) !important;
+    }
+    [data-theme="light"] #subViewDevSupervisor [style*="background:#1e293b"],
+    [data-theme="light"] #subViewDevCloudflare [style*="background:#1e293b"],
+    [data-theme="light"] #subViewDevAndroid [style*="background:#1e293b"],
+    [data-theme="light"] #subViewDevProtocols [style*="background:#1e293b"],
+    [data-theme="light"] #subViewSecHistory [style*="background:#1e293b"],
+    [data-theme="light"] #subViewDevSupervisor [style*="background:#020617"],
+    [data-theme="light"] #subViewDevCloudflare [style*="background:#020617"],
+    [data-theme="light"] #subViewDevAndroid [style*="background:#020617"],
+    [data-theme="light"] #subViewDevProtocols [style*="background:#020617"],
+    [data-theme="light"] #subViewSecHistory [style*="background:#020617"],
+    [data-theme="light"] #subViewDevSupervisor [style*="background:#090d16"],
+    [data-theme="light"] #subViewDevCloudflare [style*="background:#090d16"],
+    [data-theme="light"] #subViewDevAndroid [style*="background:#090d16"],
+    [data-theme="light"] #subViewDevProtocols [style*="background:#090d16"],
+    [data-theme="light"] #subViewSecHistory [style*="background:#090d16"],
+    [data-theme="light"] #subViewDevSupervisor [style*="background:#0b1120"],
+    [data-theme="light"] #subViewDevCloudflare [style*="background:#0b1120"],
+    [data-theme="light"] #subViewDevAndroid [style*="background:#0b1120"],
+    [data-theme="light"] #subViewDevProtocols [style*="background:#0b1120"],
+    [data-theme="light"] #subViewSecHistory [style*="background:#0b1120"],
+    [data-theme="light"] #subViewDevSupervisor [style*="background:#1c1917"],
+    [data-theme="light"] #subViewDevCloudflare [style*="background:#1c1917"],
+    [data-theme="light"] #subViewDevAndroid [style*="background:#1c1917"],
+    [data-theme="light"] #subViewDevProtocols [style*="background:#1c1917"],
+    [data-theme="light"] #subViewSecHistory [style*="background:#1c1917"],
+    [data-theme="light"] #subViewDevSupervisor [style*="background:#334155"],
+    [data-theme="light"] #subViewDevCloudflare [style*="background:#334155"],
+    [data-theme="light"] #subViewDevAndroid [style*="background:#334155"],
+    [data-theme="light"] #subViewDevProtocols [style*="background:#334155"],
+    [data-theme="light"] #subViewSecHistory [style*="background:#334155"] {
+      background: var(--bg-elevated) !important;
+    }
+    [data-theme="light"] #subViewDevSupervisor [style*="border:1px solid #334155"],
+    [data-theme="light"] #subViewDevCloudflare [style*="border:1px solid #334155"],
+    [data-theme="light"] #subViewDevAndroid [style*="border:1px solid #334155"],
+    [data-theme="light"] #subViewDevProtocols [style*="border:1px solid #334155"],
+    [data-theme="light"] #subViewSecHistory [style*="border:1px solid #334155"],
+    [data-theme="light"] #subViewDevSupervisor [style*="border:1px solid #475569"],
+    [data-theme="light"] #subViewDevCloudflare [style*="border:1px solid #475569"],
+    [data-theme="light"] #subViewDevAndroid [style*="border:1px solid #475569"],
+    [data-theme="light"] #subViewDevProtocols [style*="border:1px solid #475569"],
+    [data-theme="light"] #subViewSecHistory [style*="border:1px solid #475569"],
+    [data-theme="light"] #subViewDevSupervisor [style*="border-bottom:1px solid #1e293b"],
+    [data-theme="light"] #subViewDevCloudflare [style*="border-bottom:1px solid #1e293b"],
+    [data-theme="light"] #subViewDevAndroid [style*="border-bottom:1px solid #1e293b"],
+    [data-theme="light"] #subViewDevProtocols [style*="border-bottom:1px solid #1e293b"],
+    [data-theme="light"] #subViewSecHistory [style*="border-bottom:1px solid #1e293b"] {
+      border-color: var(--border) !important;
+    }
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#ffffff"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#ffffff"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#ffffff"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#ffffff"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#ffffff"] { color: var(--text-heading) !important; }
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#f8fafc"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#f8fafc"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#f8fafc"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#f8fafc"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#f8fafc"],
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#e2e8f0"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#e2e8f0"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#e2e8f0"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#e2e8f0"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#e2e8f0"],
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#cbd5e1"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#cbd5e1"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#cbd5e1"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#cbd5e1"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#cbd5e1"],
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#f1f5f9"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#f1f5f9"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#f1f5f9"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#f1f5f9"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#f1f5f9"] { color: var(--text) !important; }
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#94a3b8"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#94a3b8"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#94a3b8"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#94a3b8"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#94a3b8"] { color: var(--text-muted) !important; }
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#38bdf8"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#38bdf8"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#38bdf8"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#38bdf8"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#38bdf8"] { color: #0284c7 !important; }
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#93c5fd"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#93c5fd"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#93c5fd"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#93c5fd"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#93c5fd"] { color: #1d4ed8 !important; }
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#22c55e"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#22c55e"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#22c55e"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#22c55e"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#22c55e"] { color: #16a34a !important; }
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#34d399"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#34d399"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#34d399"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#34d399"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#34d399"],
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#10b981"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#10b981"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#10b981"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#10b981"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#10b981"],
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#86efac"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#86efac"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#86efac"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#86efac"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#86efac"],
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#6ee7b7"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#6ee7b7"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#6ee7b7"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#6ee7b7"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#6ee7b7"] { color: #059669 !important; }
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#fca5a5"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#fca5a5"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#fca5a5"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#fca5a5"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#fca5a5"],
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#f87171"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#f87171"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#f87171"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#f87171"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#f87171"] { color: #dc2626 !important; }
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#fbbf24"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#fbbf24"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#fbbf24"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#fbbf24"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#fbbf24"],
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#f59e0b"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#f59e0b"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#f59e0b"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#f59e0b"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#f59e0b"] { color: #d97706 !important; }
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#f472b6"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#f472b6"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#f472b6"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#f472b6"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#f472b6"] { color: #db2777 !important; }
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#c4b5fd"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#c4b5fd"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#c4b5fd"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#c4b5fd"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#c4b5fd"],
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#c084fc"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#c084fc"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#c084fc"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#c084fc"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#c084fc"] { color: #7c3aed !important; }
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#fde68a"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#fde68a"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#fde68a"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#fde68a"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#fde68a"],
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#fef3c7"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#fef3c7"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#fef3c7"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#fef3c7"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#fef3c7"] { color: #92400e !important; }
+    [data-theme="light"] #subViewDevSupervisor [style*="color:#fed7aa"],
+    [data-theme="light"] #subViewDevCloudflare [style*="color:#fed7aa"],
+    [data-theme="light"] #subViewDevAndroid [style*="color:#fed7aa"],
+    [data-theme="light"] #subViewDevProtocols [style*="color:#fed7aa"],
+    [data-theme="light"] #subViewSecHistory [style*="color:#fed7aa"] { color: #9a3412 !important; }
+    [data-theme="light"] #subViewDevSupervisor option,
+    [data-theme="light"] #subViewDevCloudflare option,
+    [data-theme="light"] #subViewDevAndroid option,
+    [data-theme="light"] #subViewDevProtocols option,
+    [data-theme="light"] #subViewSecHistory option { background: #ffffff; color: var(--text); }
+    /* Narrative chips keep their dark chip backgrounds in light theme too,
+       so their light text must NOT be darkened by the mappings above. */
+    [data-theme="light"] #subViewDevSupervisor #btnNarrativeGreen { color: #6ee7b7 !important; }
+    [data-theme="light"] #subViewDevSupervisor #btnNarrativeYellow { color: #fde68a !important; }
+    [data-theme="light"] #subViewDevSupervisor #btnNarrativeRed { color: #fca5a5 !important; }
+    /* WhatsApp pairing title sits on a light box in light theme. */
+    [data-theme="light"] #waStateTitle { color: var(--text-heading) !important; }
+    /* Protocols advanced <details> bar: translucent dark + dim text. */
+    [data-theme="light"] #subViewDevProtocols details {
+      background: var(--bg-elevated) !important; border-color: var(--border) !important;
+    }
+    [data-theme="light"] #subViewDevProtocols details summary { color: var(--text) !important; }
+    [data-theme="light"] #subViewDevSupervisor input::placeholder,
+    [data-theme="light"] #subViewDevCloudflare input::placeholder,
+    [data-theme="light"] #subViewDevAndroid input::placeholder,
+    [data-theme="light"] #subViewDevProtocols input::placeholder,
+    [data-theme="light"] #subViewSecHistory input::placeholder,
+    [data-theme="light"] #subViewDevSupervisor textarea::placeholder,
+    [data-theme="light"] #subViewDevCloudflare textarea::placeholder,
+    [data-theme="light"] #subViewDevAndroid textarea::placeholder,
+    [data-theme="light"] #subViewDevProtocols textarea::placeholder,
+    [data-theme="light"] #subViewSecHistory textarea::placeholder { color: var(--text-muted); opacity: 1; }
   </style>
 </head>
 
@@ -1162,7 +1382,7 @@
       </div>
 
       <!-- PayNova demo store Port 5000 switch badge -->
-      <div class="store-switch-badge is-offline" id="headerStoreBadge" onclick="toggleYoupiStore()"
+      <div class="store-switch-badge is-offline" id="headerStoreBadge" onclick="togglePayNovaStore()"
         title="Click to enable or disable the PayNova demo store on Port 5000">
         <span id="headerStoreDot">●</span>
         <span id="headerStoreText">Store (5000): Checking...</span>
@@ -2820,8 +3040,8 @@
                 style="font-size:0.85rem; padding:0.6rem 1.1rem; text-decoration:none;">
                 🌐 Open Store (5000) ↗
               </a>
-              <button class="btn btn-primary" id="btnToggleYoupiStore"
-                style="font-size:0.88rem; padding:0.65rem 1.4rem;" onclick="toggleYoupiStore()">
+              <button class="btn btn-primary" id="btnTogglePayNovaStore"
+                style="font-size:0.88rem; padding:0.65rem 1.4rem;" onclick="togglePayNovaStore()">
                 ⚡ Toggle Port 5000
               </button>
             </div>
@@ -4080,7 +4300,7 @@
 
       // 2. Developer Card
       const cBadge = document.getElementById('cardStoreBadge');
-      const btnToggle = document.getElementById('btnToggleYoupiStore') || document.getElementById('btnToggleGamerVaultStore');
+      const btnToggle = document.getElementById('btnTogglePayNovaStore') || document.getElementById('btnToggleYoupiStore') || document.getElementById('btnToggleGamerVaultStore');
       const btnLink = document.getElementById('btnOpenStoreLink');
       if (cBadge && btnToggle) {
         if (isRunning) {
@@ -4100,7 +4320,7 @@
       }
     }
 
-    async function toggleYoupiStore() {
+    async function togglePayNovaStore() {
       const store = servicesList.find(s => s.id === 'coin-wallet-store');
       const isRunning = store && store.status === 'RUNNING';
 
@@ -4115,7 +4335,8 @@
 
     // Compatibility aliases
     window.updateGamerVaultStoreStatus = updateYoupiStoreStatus;
-    window.toggleGamerVaultStore = toggleYoupiStore;
+    window.toggleGamerVaultStore = togglePayNovaStore;
+    window.toggleYoupiStore = togglePayNovaStore; // legacy alias: older embeds call this name
 
     async function startService(id) {
       try {
