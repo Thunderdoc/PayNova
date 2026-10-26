@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Merchant Dashboard · PayNova</title>
+<style>
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#0f172a}
+  header{background:linear-gradient(135deg,#0ea5e9,#0b63e5);color:#fff;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .shield{width:44px;height:50px;background:rgba(255,255,255,.2);border-radius:8px 8px 16px 16px;display:grid;place-items:center;font-weight:900;font-size:22px}
+  header h1{margin:0;font-size:20px}
+  header p{margin:2px 0 0;opacity:.85;font-size:13px}
+  header button{background:#fff;color:#0b63e5;border:none;border-radius:10px;padding:10px 18px;font-weight:800;cursor:pointer}
+  main{max-width:960px;margin:0 auto;padding:24px}
+  section{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;margin-bottom:20px}
+  section h2{margin:0 0 14px;font-size:17px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid #f1f5f9}
+  th{color:#64748b;font-size:12px;text-transform:uppercase}
+  .muted{color:#64748b;font-size:14px}
+  label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}
+  input{width:100%;padding:10px 12px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:14px;box-sizing:border-box}
+  input:focus{outline:none;border-color:#0b63e5;box-shadow:0 0 0 3px #bfdbfe}
+  .btn{background:#0b63e5;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-weight:700;cursor:pointer;margin-top:14px}
+  .btn-sm{padding:6px 12px;font-size:13px;margin:0}
+  .btn-outline{background:#fff;color:#0b63e5;border:1.5px solid #bfdbfe}
+  .err{display:none;margin:14px 0 0;padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:10px;font-size:14px}
+  .ok{display:none;margin:14px 0 0;padding:10px 12px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:10px;font-size:14px}
+  .acct{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;flex-wrap:wrap}
+  .badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#dcfce7;color:#166534}
+  .badge.off{background:#f1f5f9;color:#64748b}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="shield">P</div>
+    <div>
+      <h1 id="bizName">Merchant Dashboard</h1>
+      <p id="userLine">Loading…</p>
+    </div>
+  </div>
+  <button type="button" id="logoutBtn">Logout</button>
+</header>
+<main>
+  <div class="err" id="pageErr"></div>
+
+  <section>
+    <h2>Payments</h2>
+    <div id="paymentsWrap" class="muted">Loading payments…</div>
+  </section>
+
+  <section>
+    <h2>Receiving accounts</h2>
+    <div id="accountsWrap" class="muted">Loading accounts…</div>
+    <form id="accountForm">
+      <label for="upiId">UPI ID</label>
+      <input id="upiId" type="text" placeholder="name@bank" required />
+      <label for="payeeName">Payee name</label>
+      <input id="payeeName" type="text" required />
+      <div class="err" id="acctErr"></div>
+      <div class="ok" id="acctOk">Account added.</div>
+      <button class="btn" type="submit">Add receiving account</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Settings</h2>
+    <form id="settingsForm">
+      <label for="setBusiness">Business name</label>
+      <input id="setBusiness" type="text" required />
+      <label for="setPhone">Phone</label>
+      <input id="setPhone" type="text" />
+      <label for="setWebhook">Webhook URL</label>
+      <input id="setWebhook" type="url" placeholder="https://example.com/webhook" />
+      <div class="err" id="setErr"></div>
+      <div class="ok" id="setOk">Settings saved.</div>
+      <button class="btn" type="submit">Save settings</button>
+    </form>
+  </section>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  async function api(path, options) {
+    const res = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...(options || {}) });
+    if (res.status === 401) { window.location.href = '/merchant/login'; throw new Error('Session expired.'); }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Request failed.');
+    return data;
+  }
+
+  function money(paise) {
+    return '₹' + (Number(paise) / 100).toFixed(2);
+  }
+
+  async function loadMe() {
+    const data = await api('/merchant/api/me');
+    $('bizName').textContent = data.merchant.businessName;
+    $('userLine').textContent = data.user.name + ' · ' + data.user.email;
+    $('setBusiness').value = data.merchant.businessName || '';
+    $('setPhone').value = data.merchant.contactPhone || '';
+    $('setWebhook').value = data.merchant.webhookUrl || '';
+  }
+
+  async function loadPayments() {
+    const data = await api('/merchant/api/payments');
+    if (!data.payments.length) {
+      $('paymentsWrap').innerHTML = '<span class="muted">No payments yet.</span>';
+      return;
+    }
+    $('paymentsWrap').innerHTML = '<table><thead><tr><th>Order</th><th>Amount</th><th>Status</th><th>Method</th><th>Date</th></tr></thead><tbody>'
+      + data.payments.map((p) => '<tr><td>' + esc(p.orderId) + '</td><td>' + esc(money(p.amountPaise)) + '</td><td>' + esc(p.status) + '</td><td>' + esc(p.method) + '</td><td>' + esc(new Date(p.createdAt).toLocaleString()) + '</td></tr>').join('')
+      + '</tbody></table>';
+  }
+
+  async function loadAccounts() {
+    const data = await api('/merchant/api/accounts');
+    if (!data.accounts.length) {
+      $('accountsWrap').innerHTML = '<span class="muted">No receiving accounts yet. Add your UPI ID below.</span>';
+      return;
+    }
+    $('accountsWrap').innerHTML = data.accounts.map((a) => '<div class="acct"><div><strong>' + esc(a.upiId) + '</strong> · ' + esc(a.payeeName)
+      + ' <span class="badge ' + (a.isActive ? '' : 'off') + '">' + (a.isActive ? 'ACTIVE' : 'INACTIVE') + '</span></div>'
+      + (a.isActive ? '' : '<button class="btn btn-sm btn-outline" type="button" data-activate="' + esc(a.id) + '">Activate</button>') + '</div>').join('');
+    document.querySelectorAll('[data-activate]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        try {
+          await api('/merchant/api/accounts/' + encodeURIComponent(btn.dataset.activate) + '/activate', { method: 'POST' });
+          await loadAccounts();
+        } catch (ex) { /* error shown via reload state */ }
+      });
+    });
+  }
+
+  $('logoutBtn').addEventListener('click', async () => {
+    try { await api('/merchant/api/logout', { method: 'POST' }); } catch {}
+    window.location.href = '/merchant/login';
+  });
+
+  $('accountForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    $('acctErr').style.display = 'none';
+    $('acctOk').style.display = 'none';
+    try {
+      await api('/merchant/api/accounts', {
+        method: 'POST',
+        body: JSON.stringify({ upiId: $('upiId').value.trim(), payeeName: $('payeeName').value.trim() })
+      });
+      $('acctOk').style.display = 'block';
+      $('upiId').value = '';
+      $('payeeName').value = '';
+      await loadAccounts();
+    } catch (ex) {
+      $('acctErr').textContent = ex.message;
+      $('acctErr').style.display = 'block';
+    }
+  });
+
+  $('settingsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    $('setErr').style.display = 'none';
+    $('setOk').style.display = 'none';
+    try {
+      await api('/merchant/api/me', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          businessName: $('setBusiness').value.trim(),
+          contactPhone: $('setPhone').value.trim(),
+          webhookUrl: $('setWebhook').value.trim()
+        })
+      });
+      $('setOk').style.display = 'block';
+      await loadMe();
+    } catch (ex) {
+      $('setErr').textContent = ex.message;
+      $('setErr').style.display = 'block';
+    }
+  });
+
+  (async () => {
+    try {
+      await loadMe();
+      await loadPayments();
+      await loadAccounts();
+    } catch (ex) {
+      if (ex.message !== 'Session expired.') {
+        $('pageErr').textContent = ex.message;
+        $('pageErr').style.display = 'block';
+      }
+    }
+  })();
+</script>
+</body>
+</html>

@@ -3,7 +3,23 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getDatabase, MerchantRepository, SupportTicketRepository } from '@youpi/db';
+import { getDatabase, MerchantRepository, MerchantUserRepository, PaymentSessionRepository, ReceivingAccountRepository, SupportTicketRepository } from '@youpi/db';
+import {
+  MERCHANT_SESSION_TTL_MS,
+  clearLoginFailures,
+  clearSessionCookieHeader,
+  clientIp,
+  createSessionToken,
+  hashPassword,
+  hashSessionToken,
+  isLoginRateLimited,
+  isValidEmail,
+  parseSessionCookie,
+  recordLoginFailure,
+  sessionCookieHeader,
+  slugifyBusinessName,
+  verifyPassword
+} from './merchant-auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,6 +45,9 @@ export class AdminServer {
     this.db = options.db || getDatabase();
     this.apiBaseUrl = options.apiBaseUrl || process.env.BASE_PAYMENT_API_URL || 'http://localhost:6100';
     this.merchantRepo = new MerchantRepository(this.db);
+    this.merchantUserRepo = new MerchantUserRepository(this.db);
+    this.paymentRepo = new PaymentSessionRepository(this.db);
+    this.accountRepo = new ReceivingAccountRepository(this.db);
     this.ticketRepo = new SupportTicketRepository(this.db);
     this.htmlTemplatePath = path.join(__dirname, 'views', 'admin.html');
     this.template = fs.readFileSync(this.htmlTemplatePath, 'utf8');
@@ -61,6 +80,302 @@ export class AdminServer {
     const expected = Buffer.from(configured, 'utf8');
     const actual = Buffer.from(provided, 'utf8');
     return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+  }
+
+  // ---- Merchant portal (self-serve registration + login) ----
+  // These routes are deliberately separate from the owner dashboard:
+  // a merchant session cookie is never accepted for / or /admin, and
+  // every merchant API call is scoped to the session's own merchant_id.
+  // Client-supplied merchant ids are never trusted.
+
+  readMerchantView(filename) {
+    return fs.readFileSync(path.join(__dirname, 'views', filename), 'utf8');
+  }
+
+  sendMerchantJson(res, status, obj) {
+    res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify(obj));
+  }
+
+  readJsonBody(req) {
+    return new Promise((resolve, reject) => {
+      let raw = '';
+      req.on('data', chunk => { raw += chunk; });
+      req.on('end', () => {
+        if (!raw.trim()) { resolve({}); return; }
+        try { resolve(JSON.parse(raw)); } catch { reject(new Error('Invalid JSON request body')); }
+      });
+      req.on('error', reject);
+    });
+  }
+
+  resolveMerchantSession(req) {
+    const token = parseSessionCookie(req);
+    if (!token) return null;
+    const session = this.merchantUserRepo.findByTokenHash(hashSessionToken(token));
+    if (!session) return null;
+    const user = this.merchantUserRepo.findById(session.merchantUserId);
+    if (!user) return null;
+    const merchant = this.merchantRepo.findById(user.merchantId);
+    if (!merchant) return null;
+    return { session, user, merchant, token };
+  }
+
+  startMerchantSession(req, res, user) {
+    const { token, tokenHash } = createSessionToken();
+    this.merchantUserRepo.createSession({
+      merchantUserId: user.id,
+      tokenHash,
+      expiresAt: new Date(Date.now() + MERCHANT_SESSION_TTL_MS),
+      ipAddress: clientIp(req),
+      userAgent: req.headers?.['user-agent'] || ''
+    });
+    res.setHeader('Set-Cookie', sessionCookieHeader(token, req));
+    return token;
+  }
+
+  publicMerchant(merchant) {
+    return {
+      id: merchant.id,
+      businessName: merchant.businessName,
+      contactEmail: merchant.contactEmail,
+      contactPhone: merchant.contactPhone,
+      webhookUrl: merchant.webhookUrl,
+      slug: merchant.slug
+    };
+  }
+
+  async handleMerchantRoutes(req, res, pathname) {
+    const method = req.method.toUpperCase();
+
+    // Public pages -------------------------------------------------------
+    if (pathname === '/merchant') {
+      const session = this.resolveMerchantSession(req);
+      res.writeHead(302, { Location: session ? '/merchant/dashboard' : '/merchant/login' });
+      res.end();
+      return true;
+    }
+    if (pathname === '/merchant/login' || pathname === '/merchant/register') {
+      if (method !== 'GET') { this.sendMerchantJson(res, 405, { error: 'Method not allowed.' }); return true; }
+      if (this.resolveMerchantSession(req)) {
+        res.writeHead(302, { Location: '/merchant/dashboard' });
+        res.end();
+        return true;
+      }
+      const view = pathname === '/merchant/login' ? 'merchant-login.html' : 'merchant-register.html';
+      try {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+        res.end(this.readMerchantView(view));
+      } catch {
+        this.sendMerchantJson(res, 500, { error: 'Merchant page unavailable.' });
+      }
+      return true;
+    }
+    if (pathname === '/merchant/dashboard') {
+      if (method !== 'GET') { this.sendMerchantJson(res, 405, { error: 'Method not allowed.' }); return true; }
+      try {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+        res.end(this.readMerchantView('merchant-dashboard.html'));
+      } catch {
+        this.sendMerchantJson(res, 500, { error: 'Merchant page unavailable.' });
+      }
+      return true;
+    }
+
+    if (!pathname.startsWith('/merchant/api/')) return false;
+    const apiPath = pathname.slice('/merchant/api'.length);
+
+    // Registration -------------------------------------------------------
+    if (apiPath === '/register') {
+      if (method !== 'POST') { this.sendMerchantJson(res, 405, { error: 'Method not allowed.' }); return true; }
+      let body;
+      try { body = await this.readJsonBody(req); } catch (e) { this.sendMerchantJson(res, 400, { error: e.message }); return true; }
+      const name = String(body.name || '').trim();
+      const businessName = String(body.businessName || '').trim();
+      const email = String(body.email || '').trim().toLowerCase();
+      const phone = String(body.phone || '').trim();
+      const password = String(body.password || '');
+      if (!name) { this.sendMerchantJson(res, 400, { error: 'Your name is required.' }); return true; }
+      if (!businessName) { this.sendMerchantJson(res, 400, { error: 'Business name is required.' }); return true; }
+      if (!isValidEmail(email)) { this.sendMerchantJson(res, 400, { error: 'A valid email address is required.' }); return true; }
+      if (password.length < 8) { this.sendMerchantJson(res, 400, { error: 'Password must be at least 8 characters.' }); return true; }
+      if (this.merchantUserRepo.findByEmail(email)) {
+        this.sendMerchantJson(res, 409, { error: 'An account with this email already exists.' });
+        return true;
+      }
+      let slug = null;
+      for (let attempt = 0; attempt < 5 && !slug; attempt++) {
+        const candidate = `${slugifyBusinessName(businessName)}-${crypto.randomBytes(3).toString('hex')}`;
+        if (!this.merchantRepo.findBySlug(candidate)) slug = candidate;
+      }
+      if (!slug) { this.sendMerchantJson(res, 500, { error: 'Could not create merchant. Please try again.' }); return true; }
+      const merchant = this.merchantRepo.create({
+        businessName, slug, contactEmail: email, contactPhone: phone, webhookUrl: null
+      });
+      const user = this.merchantUserRepo.create({
+        merchantId: merchant.id, name, email, passwordHash: hashPassword(password)
+      });
+      this.startMerchantSession(req, res, user);
+      this.sendMerchantJson(res, 201, {
+        merchant: { id: merchant.id, businessName: merchant.businessName },
+        user: { name: user.name, email: user.email }
+      });
+      return true;
+    }
+
+    // Login --------------------------------------------------------------
+    if (apiPath === '/login') {
+      if (method !== 'POST') { this.sendMerchantJson(res, 405, { error: 'Method not allowed.' }); return true; }
+      let body;
+      try { body = await this.readJsonBody(req); } catch (e) { this.sendMerchantJson(res, 400, { error: e.message }); return true; }
+      const email = String(body.email || '').trim().toLowerCase();
+      const password = String(body.password || '');
+      if (isLoginRateLimited(req, email)) {
+        this.sendMerchantJson(res, 429, { error: 'Too many failed login attempts. Please try again later.' });
+        return true;
+      }
+      const authUser = this.merchantUserRepo.findByEmailForAuth(email);
+      if (!authUser || !verifyPassword(password, authUser.passwordHash)) {
+        recordLoginFailure(req, email);
+        this.sendMerchantJson(res, 401, { error: 'Invalid email or password.' });
+        return true;
+      }
+      clearLoginFailures(req, email);
+      const user = this.merchantUserRepo.findById(authUser.id);
+      const merchant = this.merchantRepo.findById(user.merchantId);
+      this.startMerchantSession(req, res, user);
+      this.sendMerchantJson(res, 200, {
+        merchant: { id: merchant.id, businessName: merchant.businessName },
+        user: { name: user.name, email: user.email }
+      });
+      return true;
+    }
+
+    // Everything below requires a valid merchant session -----------------
+    const session = this.resolveMerchantSession(req);
+    if (!session) {
+      this.sendMerchantJson(res, 401, { error: 'Merchant authentication required.' });
+      return true;
+    }
+    const { user, merchant } = session;
+
+    if (apiPath === '/logout') {
+      if (method !== 'POST') { this.sendMerchantJson(res, 405, { error: 'Method not allowed.' }); return true; }
+      this.merchantUserRepo.revokeSessionByTokenHash(hashSessionToken(session.token));
+      res.setHeader('Set-Cookie', clearSessionCookieHeader(req));
+      this.sendMerchantJson(res, 200, { ok: true });
+      return true;
+    }
+
+    if (apiPath === '/me') {
+      if (method === 'GET') {
+        this.sendMerchantJson(res, 200, {
+          merchant: this.publicMerchant(merchant),
+          user: { name: user.name, email: user.email }
+        });
+        return true;
+      }
+      if (method === 'PATCH') {
+        let body;
+        try { body = await this.readJsonBody(req); } catch (e) { this.sendMerchantJson(res, 400, { error: e.message }); return true; }
+        const updates = {};
+        if (body.businessName !== undefined) {
+          const next = String(body.businessName || '').trim();
+          if (!next) { this.sendMerchantJson(res, 400, { error: 'Business name is required.' }); return true; }
+          updates.businessName = next;
+        }
+        if (body.contactPhone !== undefined) updates.contactPhone = String(body.contactPhone || '').trim();
+        if (body.webhookUrl !== undefined) {
+          const next = String(body.webhookUrl || '').trim();
+          updates.webhookUrl = next === '' ? null : next;
+        }
+        const updated = this.merchantRepo.update(merchant.id, updates);
+        this.sendMerchantJson(res, 200, {
+          merchant: this.publicMerchant(updated),
+          user: { name: user.name, email: user.email }
+        });
+        return true;
+      }
+      this.sendMerchantJson(res, 405, { error: 'Method not allowed.' });
+      return true;
+    }
+
+    if (apiPath === '/payments') {
+      if (method !== 'GET') { this.sendMerchantJson(res, 405, { error: 'Method not allowed.' }); return true; }
+      const payments = this.paymentRepo.findByMerchantId(merchant.id, 50).map(p => ({
+        id: p.id,
+        orderId: p.orderId,
+        amountPaise: Number(p.amountPaise),
+        currency: p.currency,
+        method: p.method,
+        status: p.status,
+        createdAt: p.createdAt
+      }));
+      this.sendMerchantJson(res, 200, { payments });
+      return true;
+    }
+
+    if (apiPath === '/accounts') {
+      if (method === 'GET') {
+        const accounts = this.accountRepo.findByMerchantId(merchant.id).map(a => ({
+          id: a.id,
+          upiId: a.upiId,
+          payeeName: a.payeeName,
+          isActive: a.isActive,
+          isMerchantEnabled: a.isMerchantEnabled,
+          createdAt: a.createdAt
+        }));
+        this.sendMerchantJson(res, 200, { accounts });
+        return true;
+      }
+      if (method === 'POST') {
+        let body;
+        try { body = await this.readJsonBody(req); } catch (e) { this.sendMerchantJson(res, 400, { error: e.message }); return true; }
+        const upiId = String(body.upiId || '').trim();
+        const payeeName = String(body.payeeName || '').trim();
+        if (!upiId.includes('@')) { this.sendMerchantJson(res, 400, { error: 'A valid UPI ID (containing @) is required.' }); return true; }
+        if (!payeeName) { this.sendMerchantJson(res, 400, { error: 'Payee name is required.' }); return true; }
+        const account = this.accountRepo.create({ merchantId: merchant.id, upiId, payeeName });
+        this.sendMerchantJson(res, 201, {
+          account: {
+            id: account.id,
+            upiId: account.upiId,
+            payeeName: account.payeeName,
+            isActive: account.isActive,
+            isMerchantEnabled: account.isMerchantEnabled,
+            createdAt: account.createdAt
+          }
+        });
+        return true;
+      }
+      this.sendMerchantJson(res, 405, { error: 'Method not allowed.' });
+      return true;
+    }
+
+    const activateMatch = apiPath.match(/^\/accounts\/([^/]+)\/activate$/);
+    if (activateMatch) {
+      if (method !== 'POST') { this.sendMerchantJson(res, 405, { error: 'Method not allowed.' }); return true; }
+      const account = this.accountRepo.findById(activateMatch[1]);
+      if (!account || account.merchantId !== merchant.id) {
+        this.sendMerchantJson(res, 404, { error: 'Account not found.' });
+        return true;
+      }
+      const updated = this.accountRepo.activateAccount(merchant.id, account.id);
+      this.sendMerchantJson(res, 200, {
+        account: {
+          id: updated.id,
+          upiId: updated.upiId,
+          payeeName: updated.payeeName,
+          isActive: updated.isActive,
+          isMerchantEnabled: updated.isMerchantEnabled,
+          createdAt: updated.createdAt
+        }
+      });
+      return true;
+    }
+
+    this.sendMerchantJson(res, 404, { error: 'Merchant API route not found.' });
+    return true;
   }
 
   createServer() {
@@ -131,6 +446,13 @@ export class AdminServer {
         req.on('data', chunk => proxyReq.write(chunk));
         req.on('end', () => proxyReq.end());
         return;
+      }
+
+      // Merchant portal routes (self-serve registration + login). These
+      // MUST be checked before the generic /api proxy below, and they are
+      // scoped to the merchant session — never to owner routes.
+      if (pathname === '/merchant' || pathname.startsWith('/merchant/')) {
+        if (await this.handleMerchantRoutes(req, res, pathname)) return;
       }
 
       // Transparent API Proxy: /api/* -> Payment Core REST API

@@ -230,4 +230,36 @@ CREATE INDEX IF NOT EXISTS idx_devices_fingerprint ON devices (fingerprint_hash)
 CREATE INDEX IF NOT EXISTS idx_devices_token ON devices (device_token);
 CREATE INDEX IF NOT EXISTS idx_payment_sessions_device ON payment_sessions (device_id);
 
+-- 12. Merchant Portal Users (self-serve merchant registration + login)
+-- One login account per merchant business. Passwords are stored only as
+-- scrypt hashes; sessions store only sha256 hashes of random tokens.
+CREATE TABLE IF NOT EXISTS merchant_users (
+    id TEXT PRIMARY KEY,
+    merchant_id TEXT NOT NULL REFERENCES merchants(id) ON DELETE CASCADE,
+    name TEXT,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_merchant_users_merchant ON merchant_users (merchant_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_merchant_users_email ON merchant_users (email);
+
+-- 13. Merchant Portal Sessions (server-side, token hashes only)
+CREATE TABLE IF NOT EXISTS merchant_sessions (
+    id TEXT PRIMARY KEY,
+    merchant_user_id TEXT NOT NULL REFERENCES merchant_users(id) ON DELETE CASCADE,
+    token_hash TEXT UNIQUE NOT NULL,
+    expires_at TEXT NOT NULL,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    ip_address TEXT,
+    user_agent TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_merchant_sessions_token ON merchant_sessions (token_hash, is_active);
+CREATE INDEX IF NOT EXISTS idx_merchant_sessions_user ON merchant_sessions (merchant_user_id);
+
 

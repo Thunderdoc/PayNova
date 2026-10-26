@@ -208,6 +208,41 @@ export class CoinWalletStoreServer {
         return;
       }
 
+      // REVERSE PROXY: /merchant/* -> Merchant Admin (Port 6001), PUBLIC.
+      // Unlike /admin, this is NOT Basic-Auth gated: the login and
+      // register pages must be reachable without credentials, and the
+      // merchant session cookie (not a shared password) guards the rest.
+      // The FULL path is forwarded (no prefix strip) so the merchant
+      // portal's /merchant/api/* routes and cookie Path=/merchant line up.
+      if (pathname === '/merchant' || pathname.startsWith('/merchant/')) {
+        const merchantPort = Number(process.env.MERCHANT_ADMIN_PORT || 6001);
+        const proxyReq = http.request({
+          hostname: '127.0.0.1',
+          port: merchantPort,
+          path: req.url,
+          method: req.method,
+          headers: {
+            ...req.headers,
+            host: `localhost:${merchantPort}`,
+            'x-forwarded-host': req.headers.host || '',
+            'x-forwarded-proto': req.headers['x-forwarded-proto'] || 'http'
+          }
+        }, (proxyRes) => {
+          res.writeHead(proxyRes.statusCode, proxyRes.headers);
+          proxyRes.pipe(res);
+        });
+
+        proxyReq.on('error', (err) => {
+          if (!res.headersSent) {
+            res.writeHead(502, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Merchant portal unavailable', details: err.message }));
+          }
+        });
+
+        req.pipe(proxyReq);
+        return;
+      }
+
       // REVERSE PROXY: /checkout/* and /icons/* -> Checkout Portal (Port 7000)
       if (pathname.startsWith('/checkout') || pathname.startsWith('/icons/')) {
         const portalPort = Number(process.env.CHECKOUT_PORT || 7000);
