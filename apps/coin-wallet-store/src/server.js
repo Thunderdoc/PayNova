@@ -347,8 +347,15 @@ export class CoinWalletStoreServer {
         let body = '';
         req.on('data', chunk => { body += chunk; });
         req.on('end', async () => {
+          let data;
           try {
-            const data = JSON.parse(body || '{}');
+            data = JSON.parse(body || '{}');
+          } catch {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Invalid JSON request body' }));
+            return;
+          }
+          try {
             const rawVal = data.price !== undefined ? data.price : (data.amount !== undefined ? data.amount : 1.00);
             const price = Number(rawVal);
             if (isNaN(price) || price < 1) {
@@ -392,8 +399,9 @@ export class CoinWalletStoreServer {
               checkoutUrl: resolvedCheckoutUrl
             }));
           } catch (err) {
+            console.error('[Coin Wallet Store] Request failed:', err.message);
             res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: err.message }));
+            res.end(JSON.stringify({ error: 'Request failed, please try again' }));
           }
         });
         return;
@@ -404,8 +412,15 @@ export class CoinWalletStoreServer {
         let body = '';
         req.on('data', chunk => { body += chunk; });
         req.on('end', async () => {
+          let data;
           try {
-            const data = JSON.parse(body || '{}');
+            data = JSON.parse(body || '{}');
+          } catch {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Invalid JSON request body' }));
+            return;
+          }
+          try {
             const { paymentId, orderId, coins, packName } = data;
 
             if (!orderId && !paymentId) {
@@ -463,8 +478,9 @@ export class CoinWalletStoreServer {
               packName: finalPackName
             })); */
           } catch (err) {
+            console.error('[Coin Wallet Store] Request failed:', err.message);
             res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: err.message }));
+            res.end(JSON.stringify({ error: 'Request failed, please try again' }));
           }
         });
         return;
