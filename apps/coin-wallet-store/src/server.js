@@ -378,6 +378,34 @@ export class CoinWalletStoreServer {
         return;
       }
 
+      // GET /privacy — demo privacy policy page (linked from admin Support & Legal)
+      if (pathname === '/privacy' && (method === 'GET' || method === 'HEAD')) {
+        try { this.privacyHtml = fs.readFileSync(path.join(__dirname, 'privacy.html'), 'utf8'); } catch {}
+        res.writeHead(200, {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        });
+        if (method === 'HEAD') { res.end(); return; }
+        res.end(this.privacyHtml);
+        return;
+      }
+
+      // GET /terms — demo terms of use page (linked from admin Support & Legal)
+      if (pathname === '/terms' && (method === 'GET' || method === 'HEAD')) {
+        try { this.termsHtml = fs.readFileSync(path.join(__dirname, 'terms.html'), 'utf8'); } catch {}
+        res.writeHead(200, {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        });
+        if (method === 'HEAD') { res.end(); return; }
+        res.end(this.termsHtml);
+        return;
+      }
+
       // GET /order-success or /success
       if ((pathname === '/order-success' || pathname === '/success') && (method === 'GET' || method === 'HEAD')) {
         try { this.orderSuccessHtml = fs.readFileSync(path.join(__dirname, 'order-success.html'), 'utf8'); } catch {}

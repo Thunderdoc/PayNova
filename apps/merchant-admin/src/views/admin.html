@@ -4041,6 +4041,11 @@
       applyTheme(saved === 'dark' ? 'dark' : 'light');
     })();
 
+    // Resolve the header Store pill on every admin load, not only after
+    // opening the Supervisor subview (loadServices is hoisted, so this is
+    // safe here). On live its catch path applies the remote-host fallback.
+    try { loadServices(); } catch (e) { console.warn('initial loadServices warning:', e); }
+
     // --- NAVIGATION CONTROLLER: 3 HIGH-LEVEL SECTIONS ---
     function switchSection(sectionId, targetSubTab = null) {
       activeSection = sectionId;
@@ -4223,6 +4228,14 @@
         console.warn('loadServices error:', e);
         const tbody = document.getElementById('servicesTableBody');
         if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#ef4444; padding:1.5rem;">⚠️ Supervisor API unavailable (Port 8090). Ensure services are running.</td></tr>`;
+        // LIVE FIX: on a remote host the admin page itself is served through
+        // the store proxy, so the store is running by definition even when
+        // /api/services (control-center 8090) is not reachable. Without this
+        // the header pill stays stuck on "Checking..." forever on live.
+        // Locally (localhost) the store can genuinely be down while admin
+        // is up, so the pill is left untouched there.
+        const isRemote = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        if (isRemote) updateYoupiStoreStatus([{ id: 'coin-wallet-store', status: 'RUNNING' }]);
       }
     }
 
