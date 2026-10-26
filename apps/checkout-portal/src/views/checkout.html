@@ -534,18 +534,14 @@
       font-size: 11.5px;
       font-weight: 700;
       color: #0f172a;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
+      white-space: normal;
       line-height: 1.3;
     }
 
     .hk-card-subtitle {
       font-size: 10.5px;
       color: #64748b;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
+      white-space: normal;
       line-height: 1.3;
     }
 
@@ -4037,7 +4033,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <span>Secure checkout connection</span>
         </div>
-        <div style="font-size:10px; color:#64748b; margin-top:4px;">Payment status is verified by the gateway</div>
+        <div style="font-size:10px; color:#a9c7ed; margin-top:4px;">Payment status is verified by the gateway</div>
       </div>
     </aside>
 
@@ -6779,7 +6775,7 @@
 
       // Update PC Sidebar Details & Whitelabeling
       const pcMerchant = document.getElementById('pcMerchantName');
-      if (pcMerchant) pcMerchant.textContent = data.merchantName || 'Merchant Name';
+      if (pcMerchant && data.merchantName) pcMerchant.textContent = data.merchantName;
       const pcPrice = document.getElementById('pcPriceSummaryAmount');
       if (pcPrice && data.amount) pcPrice.textContent = `₹${data.amount}`;
       const pcAppBrand = document.getElementById('pcAppNameBrand');
