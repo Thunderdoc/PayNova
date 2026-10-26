@@ -121,7 +121,16 @@ export function runMigrations(targetDb) {
       branding: {
         appName: 'PayNova',
         primaryColor: '#2563eb',
-        logoUrl: null
+        logoUrl: null,
+        // Permanent demo identity: these survive every Render reseed
+        // (the demo DB is ephemeral, so anything set only via the admin
+        // API vanishes on the next deploy). The live demo's real public
+        // addresses — safe to seed, they are already shown on checkout.
+        supportEmails: ['Ankitraj2163@gmail.com'],
+        supportMobiles: ['8581883420'],
+        websiteUrl: 'https://paynova-demo.onrender.com',
+        privacyPolicyUrl: 'https://paynova-demo.onrender.com/privacy',
+        termsUrl: 'https://paynova-demo.onrender.com/terms'
       }
     });
   } else {
@@ -141,8 +150,12 @@ export function runMigrations(targetDb) {
     accountRepo.create({
       id: '00000000-0000-0000-0000-000000000002',
       merchantId: defaultMerchant.id,
-      upiId: 'merchant@upi',
-      payeeName: defaultMerchant.businessName,
+      // Permanent demo receiving VPA: the old 'merchant@upi' placeholder
+      // kept reappearing after every Render reseed because it was the
+      // seed. The demo owner's real receiving VPA is now the seed, so a
+      // reseed restores it instead of the placeholder.
+      upiId: process.env.COIN_STORE_DEMO_VPA || '8581883420@slc',
+      payeeName: process.env.COIN_STORE_DEMO_PAYEE || 'Ankit Kumar',
       isActive: true
     });
   }
