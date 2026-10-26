@@ -1281,13 +1281,14 @@
 
     .ypg-btn-auth-action {
       width: 100%;
-      padding: 12px;
-      background: var(--ypg-navy);
+      padding: 13px;
+      background: #0866F5;
       color: #ffffff;
       border: none;
-      border-radius: 8px;
-      font-size: 13.5px;
-      font-weight: 700;
+      border-radius: 10px;
+      font-size: 14.5px;
+      font-weight: 800;
+      box-shadow: 0 4px 14px rgba(8,102,245,0.25);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -1331,6 +1332,7 @@
     .ypg-method-accent-purple { color:#fff; background:#8b3dff; }
     @media (max-width: 700px) { .auth-reference-card { grid-template-columns:auto minmax(0,1fr); } .auth-checklist { grid-column:1 / -1; border-left:0; border-top:1px solid #b7efd0; padding:12px 0 0; grid-template-columns:1fr 1fr; } }
 
+    .ypg-phone-input-wrap:focus-within { border-color: #0866F5 !important; box-shadow: 0 0 0 3px rgba(8,102,245,0.15); }
     .ypg-phone-input-wrap {
       display: flex;
       align-items: center;
@@ -2980,6 +2982,8 @@
       }
 
       @media (max-width: 700px) {
+        #authViewMainTitle { font-size: 24px !important; }
+        #authViewSubTitle { font-size: 14px !important; }
         #preGatewayAuthView:not([hidden]) { padding: 20px 16px !important; }
         #preGatewayAuthView .auth-progress-line { left: 18px !important; right: 18px !important; }
         #preGatewayAuthView .auth-support-grid { grid-template-columns: 1fr !important; gap: 12px !important; }

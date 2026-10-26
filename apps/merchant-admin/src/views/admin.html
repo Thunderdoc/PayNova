@@ -1270,7 +1270,7 @@
               <div class="card-subtext">Comprehensive transaction audit history with automated bank observer attribution</div>
             </div>
             <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
-              <a href="http://localhost:6100/api/v1/admin/payments/export.csv" target="_blank" class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:5px; text-decoration:none; font-weight:700; color:#2563eb; border-color:#93c5fd; background:#eff6ff;">
+              <a href="/api/v1/admin/payments/export.csv" target="_blank" class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:5px; text-decoration:none; font-weight:700; color:#2563eb; border-color:#93c5fd; background:#eff6ff;">
                 <span>📊</span> Export Ledger (.csv)
               </a>
               <button class="btn btn-secondary" onclick="promptManualDisputeResolve()">⚖️ Reconcile Dispute</button>
@@ -1799,7 +1799,7 @@
             <div style="text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
               <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.1rem;">Checkout Mode</div>
               <div style="font-size:0.9rem; font-weight:800; color:var(--success);">✓ Direct Dynamic UPI QR Gateway</div>
-              <a href="http://localhost:6100/api/v1/admin/standee/download" target="_blank" class="btn btn-secondary" style="font-size:0.75rem; padding:0.35rem 0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:5px; margin-top:4px;">
+              <a href="/api/v1/admin/standee/download" target="_blank" class="btn btn-secondary" style="font-size:0.75rem; padding:0.35rem 0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:5px; margin-top:4px;">
                 <span>📄</span> Download Printable QR Standee (PDF)
               </a>
             </div>
@@ -3930,6 +3930,7 @@
           btnToggle.className = 'btn btn-danger';
             btnToggle.innerHTML = '⏹ Disable PayNova Demo Store (Port 5000)';
           if (btnLink) btnLink.style.display = 'inline-flex';
+          if (btnLink) btnLink.href = window.location.protocol + '//' + window.location.hostname + ':5000';
         } else {
           cBadge.className = 'badge badge-danger';
           cBadge.textContent = '🔴 DISABLED (PORT 5000 FREE)';
@@ -4807,7 +4808,7 @@
         } else {
           actionBtns += `<button class="btn btn-secondary" style="padding:0.35rem 0.65rem; font-size:0.78rem; margin-right:0.4rem;" onclick="toggleVpa('${a.id}')">Deactivate</button>`;
         }
-        actionBtns += `<a class="btn btn-secondary" href="http://localhost:6100/api/v1/admin/standee/download?accountId=${encodeURIComponent(a.id)}" target="_blank" rel="noopener" style="padding:0.35rem 0.65rem; font-size:0.78rem; margin-right:0.4rem; text-decoration:none;">Print QR</a>`;
+        actionBtns += `<a class="btn btn-secondary" href="/api/v1/admin/standee/download?accountId=${encodeURIComponent(a.id)}" target="_blank" rel="noopener" style="padding:0.35rem 0.65rem; font-size:0.78rem; margin-right:0.4rem; text-decoration:none;">Print QR</a>`;
         actionBtns += `<button class="btn btn-danger" style="padding:0.35rem 0.65rem; font-size:0.78rem;" onclick="deleteVpa('${a.id}', '${a.upiId}')">Delete</button>`;
 
         return `
