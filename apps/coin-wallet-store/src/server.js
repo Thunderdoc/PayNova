@@ -102,7 +102,24 @@ export class CoinWalletStoreServer {
         return;
       }
 
-      // GET /youpi.js or /sdk/youpi-checkout.js (Universal Frontend Integration Script)
+      // GET /paynova.js or /youpi.js (Universal Frontend Integration Script)
+      // NOTE: the store page loads /paynova.js, so it MUST be served here —
+      // previously only /youpi.js was served and /paynova.js 404'd, which made
+      // window.PayNova undefined and Buy Now fail with "reading 'pay'".
+      if (pathname === '/paynova.js' || pathname === '/sdk/paynova.js') {
+        const sdkPath = path.resolve(__dirname, '../../checkout-portal/src/sdk/paynova.js');
+        if (fs.existsSync(sdkPath)) {
+          res.writeHead(200, {
+            'Content-Type': 'application/javascript; charset=utf-8',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+            'Access-Control-Allow-Origin': '*'
+          });
+          res.end(fs.readFileSync(sdkPath, 'utf8'));
+          return;
+        }
+      }
+
+      // GET /youpi.js or /sdk/youpi-checkout.js (Universal Frontend Integration Script, legacy alias)
       if (pathname === '/youpi.js' || pathname === '/sdk/youpi-checkout.js' || pathname === '/sdk/youpi.js') {
         const sdkPath = path.resolve(__dirname, '../../checkout-portal/src/sdk/youpi.js');
         if (fs.existsSync(sdkPath)) {
