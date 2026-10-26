@@ -213,6 +213,42 @@ export class CoinWalletStoreServer {
         return;
       }
 
+      // REVERSE PROXY: /gmail/oauth/callback -> Gmail Observer (Port 6003), PUBLIC.
+      // Google redirects the owner's browser here after consent, so this
+      // path CANNOT sit behind the /admin Basic-Auth gate: the redirect
+      // carries no credentials. The observer's own /oauth/callback is
+      // already unauthenticated on its port, so this proxy matches that
+      // posture exactly; the code exchange still needs the server-side
+      // GMAIL_CLIENT_SECRET, which never reaches the browser. Set
+      // GMAIL_REDIRECT_URI to https://<public-host>/gmail/oauth/callback
+      // on any public deployment, or Google refuses the redirect.
+      if (pathname === '/gmail/oauth/callback') {
+        const gmailPort = Number(process.env.GMAIL_OBSERVER_PORT || 6003);
+        const proxyReq = http.request({
+          hostname: '127.0.0.1',
+          port: gmailPort,
+          path: '/oauth/callback' + (url.search || ''),
+          method: req.method,
+          headers: {
+            ...req.headers,
+            host: `localhost:${gmailPort}`,
+            'x-forwarded-host': req.headers.host || '',
+            'x-forwarded-proto': req.headers['x-forwarded-proto'] || 'http'
+          }
+        }, (proxyRes) => {
+          res.writeHead(proxyRes.statusCode, proxyRes.headers);
+          proxyRes.pipe(res);
+        });
+        proxyReq.on('error', (err) => {
+          if (!res.headersSent) {
+            res.writeHead(502, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Gmail observer unavailable', details: err.message }));
+          }
+        });
+        req.pipe(proxyReq);
+        return;
+      }
+
       // REVERSE PROXY: /merchant/* -> Merchant Admin (Port 6001), PUBLIC.
       // Unlike /admin, this is NOT Basic-Auth gated: the login and
       // register pages must be reachable without credentials, and the
