@@ -1,0 +1,34 @@
+# PayNova — Render demo deploy (single service, all modules in one container).
+#
+# WHY ONE SERVICE: PayNova's services talk to each other over localhost
+# (payment API 6100, checkout 7000, admin 6001, observers 6002/6003). A
+# multi-service Render setup would break those internal calls, so the whole
+# gateway runs in one service and the public entry point is the demo store.
+# The store reverse-proxies /checkout/* to the checkout portal, so a visitor
+# only needs this one public URL to browse the store and reach checkout.
+#
+# HONEST LIMITS (demo, free tier):
+# - Free instances sleep after ~15 min idle (~1 min wake on first visit).
+# - SQLite data lives on the ephemeral filesystem: demo data resets on
+#   redeploy/restart. Never use this demo for real school/merchant money.
+# - Merchant admin (6001) and the raw API (6100) are NOT publicly exposed
+#   here — they run inside the container only.
+# - Real payment verification needs the owner's paired observers (Android
+#   SMS app / Gmail OAuth) and WhatsApp OTP pairing; until those are paired,
+#   checkout shows the login/QR flow but live UPI verification will not
+#   complete. That pairing is the owner's step after deploy, not code.
+services:
+  - type: web
+    name: paynova-demo
+    env: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    # Render injects $PORT; the store listens on it so Render's health check passes.
+    startCommand: COIN_STORE_PORT=$PORT node scripts/dev.js
+    envVars:
+      - key: YOUPI_MODE
+        value: localhost
+      - key: NODE_ENV
+        value: development
+    healthCheckPath: /

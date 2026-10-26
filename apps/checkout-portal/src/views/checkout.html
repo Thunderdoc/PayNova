@@ -4142,8 +4142,8 @@
             <p id="authViewSubTitle" style="margin:0; color:#52698f; font-size:16px;">Verify your WhatsApp number to continue securely</p>
           </div>
 
-          <!-- 3-Step Fintech Progress Tracker (Matching Reference Image) -->
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; position:relative;">
+          <!-- Single-page login: the old 3-step tracker is hidden; all login lives on this one page -->
+          <div style="display:none; justify-content:space-between; align-items:center; margin-bottom:28px; position:relative;">
             <div class="auth-progress-line" style="position:absolute; top:14px; left:24px; right:24px; height:2px; background:#e2e8f0; z-index:1;"></div>
 
             <!-- Step 1 -->
@@ -4206,7 +4206,7 @@
                 <div id="authMobileHint" style="margin-top:7px; color:#52698f; font-size:12px;">We’ll send a one-time code to WhatsApp. Messaging charges may apply.</div>
               </div>
 
-              <button type="button" class="ypg-btn-auth-action" id="btnAuthContinue" onclick="handleAuthMobileSubmit()" style="background:#0866F5; color:#ffffff; font-weight:800; font-size:14.5px; padding:13px; border-radius:10px; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; box-shadow:0 4px 14px rgba(8,102,245,0.25);">
+              <button type="button" class="ypg-btn-auth-action" id="btnAuthContinue" onclick="handleAuthMobileSubmit()" hidden>
                 <span>🔒 Continue Securely</span>
               </button>
             </div>
@@ -4236,7 +4236,7 @@
                   placeholder="e.g. you@example.com" />
               </div>
 
-              <button type="button" class="ypg-btn-auth-action" id="btnAuthSignup" onclick="handleAuthSignupSubmit()">
+              <button type="button" class="ypg-btn-auth-action" id="btnAuthSignup" onclick="handleAuthSignupSubmit()" hidden>
                 <span>Sign Up &amp; Send WhatsApp OTP</span> &rsaquo;
               </button>
             </div>
@@ -4262,7 +4262,7 @@
                   autocorrect="off" autocapitalize="off" spellcheck="false" />
               </div>
 
-              <button type="button" class="ypg-btn-auth-action" id="btnAuthVerifyOtp"
+              <button type="button" class="ypg-btn-auth-action" id="btnAuthVerifyOtp" hidden
                 onclick="handleAuthVerifyOtpSubmit()">
                 <span>Verify &amp; Continue to Pay</span> &rsaquo;
               </button>
@@ -4276,6 +4276,14 @@
                 </div>
                 <span id="otpCountdownTimer" style="font-weight:600; color:#64748b;"></span>
               </div>
+            </div>
+
+            <!-- THE login button: one button at the bottom of the single login page -->
+            <div style="margin-top:18px;">
+              <!-- THE login button: one button for the whole single-page login (mobile -> signup -> OTP) -->
+              <button type="button" class="ypg-btn-auth-action" id="btnAuthUnified" onclick="handleAuthUnifiedSubmit()" style="background:#0866F5; color:#ffffff; font-weight:800; font-size:14.5px; padding:13px; border-radius:10px; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; box-shadow:0 4px 14px rgba(8,102,245,0.25);">
+                <span id="btnAuthUnifiedLabel">🔒 Continue Securely</span>
+              </button>
             </div>
 
           </div>
@@ -5586,12 +5594,12 @@
           }
         }
       } else if (step === 'signup') {
-        if (stepMobile) stepMobile.hidden = true;
+        if (stepMobile) stepMobile.hidden = false;
         if (stepSignup) stepSignup.hidden = false;
         if (stepOtp) stepOtp.hidden = true;
         if (savedAccountsBox) savedAccountsBox.hidden = true;
-        if (title) title.innerText = 'Create Account';
-        if (subtitle) subtitle.innerText = 'Complete your profile to proceed with instant checkout';
+        if (title) title.innerText = 'Sign in to Pay';
+        if (subtitle) subtitle.innerText = 'Verify your WhatsApp number to continue securely';
         const badge = document.getElementById('authSignupPhoneBadge');
         if (badge) badge.innerText = '+91 ' + currentAuthMobile;
         const nameInput = document.getElementById('authSignupName');
@@ -5602,12 +5610,12 @@
           setTimeout(() => nameInput.focus(), 50);
         }
       } else if (step === 'otp') {
-        if (stepMobile) stepMobile.hidden = true;
+        if (stepMobile) stepMobile.hidden = false;
         if (stepSignup) stepSignup.hidden = true;
         if (stepOtp) stepOtp.hidden = false;
         if (savedAccountsBox) savedAccountsBox.hidden = true;
-        if (title) title.innerText = 'Verify Mobile OTP';
-        if (subtitle) subtitle.innerText = 'Enter the 6-digit code sent to your WhatsApp number';
+        if (title) title.innerText = 'Sign in to Pay';
+        if (subtitle) subtitle.innerText = 'Verify your WhatsApp number to continue securely';
         const badge = document.getElementById('authOtpPhoneBadge');
         if (badge) badge.innerText = '+91 ' + currentAuthMobile;
         const otpInput = document.getElementById('authOtpInput');
@@ -5647,6 +5655,33 @@
           p2.querySelector('span').style.color = '#0866F5';
           p2.querySelector('span').style.fontWeight = '700';
         }
+      }
+
+      // Single-page login: mobile number stays visible and locked once the flow moves on.
+      const mobInput = document.getElementById('authMobileInput');
+      if (mobInput) mobInput.disabled = (step !== 'mobile');
+      updateAuthUnifiedButton();
+    }
+
+    // One button for the whole login: label + action follow the current step.
+    function updateAuthUnifiedButton() {
+      const label = document.getElementById('btnAuthUnifiedLabel');
+      if (!label) return;
+      if (currentAuthStep === 'signup') label.textContent = 'Sign Up & Send WhatsApp OTP ›';
+      else if (currentAuthStep === 'otp') label.textContent = 'Verify & Continue to Pay ›';
+      else label.textContent = '🔒 Continue Securely';
+    }
+
+    async function handleAuthUnifiedSubmit() {
+      const btn = document.getElementById('btnAuthUnified');
+      if (btn) { btn.disabled = true; btn.classList.add('is-loading'); }
+      try {
+        if (currentAuthStep === 'signup') await handleAuthSignupSubmit();
+        else if (currentAuthStep === 'otp') await handleAuthVerifyOtpSubmit();
+        else await handleAuthMobileSubmit();
+      } finally {
+        if (btn) { btn.disabled = false; btn.classList.remove('is-loading'); }
+        updateAuthUnifiedButton();
       }
     }
 
