@@ -4219,7 +4219,7 @@
     // --- MERGED CONTROL CENTER & SYSTEM SUPERVISOR ---
     async function loadServices() {
       try {
-        const res = await fetch('/api/services');
+        const res = await fetch(`${API_BASE}/api/services`);
         if (!res.ok) throw new Error('Supervisor unreachable');
         servicesList = await res.json();
         renderServicesTable(servicesList);
@@ -4353,7 +4353,7 @@
 
     async function startService(id) {
       try {
-        const res = await fetch(`/api/services/${id}/start`, { method: 'POST' });
+        const res = await fetch(`${API_BASE}/api/services/${id}/start`, { method: 'POST' });
         const data = await res.json();
         if (!res.ok) alert(data.error || 'Failed to start service');
         loadServices();
@@ -4364,7 +4364,7 @@
 
     async function stopService(id) {
       try {
-        const res = await fetch(`/api/services/${id}/stop`, { method: 'POST' });
+        const res = await fetch(`${API_BASE}/api/services/${id}/stop`, { method: 'POST' });
         const data = await res.json();
         if (!res.ok) alert(data.error || 'Failed to stop service');
         loadServices();
@@ -4375,7 +4375,7 @@
 
     async function restartService(id) {
       try {
-        const res = await fetch(`/api/services/${id}/restart`, { method: 'POST' });
+        const res = await fetch(`${API_BASE}/api/services/${id}/restart`, { method: 'POST' });
         const data = await res.json();
         if (!res.ok) alert(data.error || 'Failed to restart service');
         loadServices();
@@ -4386,7 +4386,7 @@
 
     async function startAllServices() {
       try {
-        await fetch('/api/services/start-all', { method: 'POST' });
+        await fetch(`${API_BASE}/api/services/start-all`, { method: 'POST' });
         showAdminToast('Starting all modular services...');
         setTimeout(loadServices, 1000);
       } catch (e) { }
@@ -4395,7 +4395,7 @@
     async function stopAllServices() {
       if (!confirm('Are you sure you want to stop all background gateway services? (Control supervisor will remain online).')) return;
       try {
-        await fetch('/api/services/stop-all', { method: 'POST' });
+        await fetch(`${API_BASE}/api/services/stop-all`, { method: 'POST' });
         showAdminToast('Stopping all services...');
         setTimeout(loadServices, 1000);
       } catch (e) { }
@@ -4406,7 +4406,7 @@
     function connectServicesLogsSse() {
       if (servicesLogsSse) return;
       try {
-        servicesLogsSse = new EventSource('/api/logs/stream');
+        servicesLogsSse = new EventSource(`${API_BASE}/api/logs/stream`);
         servicesLogsSse.addEventListener('log', (e) => {
           try {
             const entry = JSON.parse(e.data);

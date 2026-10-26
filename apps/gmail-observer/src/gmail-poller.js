@@ -68,7 +68,7 @@ export class GmailPoller {
 
   async fetchCredentialsFromPaymentApi() {
     try {
-      const res = await fetch(`${this.apiBaseUrl}/api/v1/admin/gmail/credentials`);
+      const res = await fetch(`${this.apiBaseUrl}/api/v1/admin/gmail/credentials`, { headers: (process.env.ADMIN_API_KEY ? { 'x-admin-api-key': process.env.ADMIN_API_KEY } : {}) });
       if (res.ok) {
         const data = await res.json();
         const conf = data.gmailConfig || data;

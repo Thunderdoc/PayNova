@@ -2,6 +2,17 @@ import http from 'node:http';
 import { GmailPoller } from './gmail-poller.js';
 import { GmailBrowserAutomator } from './browser-automator.js';
 
+// Server-to-server auth for payment-api admin endpoints. The payment-api
+// guard requires x-admin-api-key whenever ADMIN_API_KEY is configured
+// (live); without it the observer's credential reads/writes get 401 and
+// the OAuth callback reports "Missing Client ID or Secret" even though the
+// creds are saved in the DB. Locally the key is unset, so no header is sent.
+function adminApiHeaders() {
+  const key = process.env.ADMIN_API_KEY || '';
+  return key ? { 'x-admin-api-key': key } : {};
+}
+
+
 export class GmailObserverServer {
   /**
    * @param {{
@@ -57,7 +68,7 @@ export class GmailObserverServer {
         let clientId = '';
         const apiBase = (this.poller.apiBaseUrl || `http://127.0.0.1:${process.env.PAYMENT_API_PORT || 6100}`);
         try {
-          const credRes = await fetch(`${apiBase}/api/v1/admin/gmail/credentials`);
+          const credRes = await fetch(`${apiBase}/api/v1/admin/gmail/credentials`, { headers: adminApiHeaders() });
           if (credRes.ok) {
             const credData = await credRes.json();
             clientId = credData.clientId || credData.gmailConfig?.clientId || '';
@@ -105,7 +116,7 @@ export class GmailObserverServer {
           const apiBase = (this.poller.apiBaseUrl || `http://127.0.0.1:${process.env.PAYMENT_API_PORT || 6100}`);
 
           try {
-            const credRes = await fetch(`${apiBase}/api/v1/admin/gmail/credentials`);
+            const credRes = await fetch(`${apiBase}/api/v1/admin/gmail/credentials`, { headers: adminApiHeaders() });
             if (credRes.ok) {
               const credData = await credRes.json();
               clientId = credData.clientId || credData.gmailConfig?.clientId || '';
@@ -183,7 +194,7 @@ export class GmailObserverServer {
           try {
             await fetch(`${apiBase}/api/v1/admin/gmail/credentials`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', ...adminApiHeaders() },
               body: JSON.stringify({
                 clientId,
                 clientSecret,

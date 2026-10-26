@@ -30,6 +30,7 @@ const testFiles = [
   'apps/payment-api/src/__tests__/sms-gmail-verification-levels.test.js',
   'apps/payment-api/src/__tests__/upi-server-health-and-pc-ui.test.js',
   'apps/payment-api/src/__tests__/whatsapp-berry-auth.test.js',
+  'apps/payment-api/src/__tests__/whatsapp-session-store.test.js',
   'apps/payment-api/src/__tests__/whitelabel-branding.test.js',
   'apps/payment-api/src/__tests__/receipt-system.test.js',
   'apps/payment-api/src/__tests__/cod-parallel-timer-decoupling.test.js',

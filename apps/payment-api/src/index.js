@@ -49,6 +49,7 @@ import { registerAdminRoutes } from './routes/admin.routes.js';
 import { registerCustomerRoutes } from './routes/customer.routes.js';
 import { registerDeviceRoutes } from './routes/device.routes.js';
 import { getWhatsAppBerryService, WhatsAppBerryService } from './services/whatsapp-berry.service.js';
+import { restoreWhatsAppSession, attachSessionPersistence } from './services/whatsapp-session-store.js';
 
 export function createPaymentApp(customDb = null, options = {}) {
   const db = customDb || getDatabase();
@@ -61,6 +62,20 @@ export function createPaymentApp(customDb = null, options = {}) {
     databasePath: path.resolve(rootDir, 'data/test_berry_store.db'),
     metaFile: path.resolve(rootDir, 'data/test_whatsapp_session.json')
   }) : getWhatsAppBerryService());
+
+  // WhatsApp session persistence (no-op without WP_SESSION_KV_* env vars):
+  // after a deploy wipes the container, the KV snapshot is restored in
+  // startServer() before this point; here we wire live saves (connection.open
+  // + auth-file watcher + SIGTERM flush) for the production service only.
+  // Test apps (customDb / injected service) never get persistence attached.
+  if (!isCustom && !options.whatsappBerryService) {
+    attachSessionPersistence(whatsappBerryService, {
+      rootDir,
+      sessionPath: whatsappBerryService.sessionPath,
+      databasePath: whatsappBerryService.databasePath,
+      metaFile: whatsappBerryService.metaFile
+    });
+  }
 
   const merchantRepo = new MerchantRepository(db);
   const accountRepo = new ReceivingAccountRepository(db);
@@ -630,8 +645,16 @@ export function createPaymentApp(customDb = null, options = {}) {
   };
 }
 
-export function startServer(port = null, customDb = null) {
+export async function startServer(port = null, customDb = null) {
   const finalPort = port || Number(process.env.PAYMENT_API_PORT || 6100);
+
+  // ORDERING GUARANTEE: restore the KV session snapshot BEFORE
+  // createPaymentApp() constructs the Berry singleton, because the singleton
+  // constructor synchronously reads the session files (restoreSessionMeta)
+  // and only auto-resumes if they are already on disk. restoreWhatsAppSession
+  // never throws and is a no-op without WP_SESSION_KV_* env vars.
+  await restoreWhatsAppSession();
+
   const app = createPaymentApp(customDb);
 
   return new Promise(resolve => {

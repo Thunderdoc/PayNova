@@ -39,6 +39,15 @@ services:
         value: development
       - key: ADMIN_API_BASE
         value: /admin
+      # Public demo addresses (NOT secrets — both are already shown on
+      # checkout/admin). Seeding them here makes every Render reseed use
+      # the live public URLs instead of localhost fallbacks, so the
+      # webhook destination and the Gmail OAuth redirect survive deploys
+      # without any dashboard env trip.
+      - key: COIN_STORE_WEBHOOK_URL
+        value: https://paynova-demo.onrender.com/api/webhook
+      - key: GMAIL_REDIRECT_URI
+        value: https://paynova-demo.onrender.com/gmail/oauth/callback
       # Dashboard-managed secrets (sync:false = Render dashboard owns the
       # value; the Blueprint never overwrites it). Set both in the Render
       # dashboard: ADMIN_DASHBOARD_PASSWORD = the password for /admin,
